@@ -18,6 +18,5 @@ namespace Micon.CMS.Models
         [ForeignKey(nameof(Tenant))]
         public Guid TenantKey { get; set; }
         public Tenant Tenant { get; init; }
-        public bool IsTenantAdmin { get; set; } = false;
     }
 }
