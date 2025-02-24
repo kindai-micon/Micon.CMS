@@ -7,8 +7,8 @@ namespace Micon.CMS.Models
     {
         public ApplicationUser()
         {
-            Id = Guid.NewGuid();
-            SecurityStamp = Guid.NewGuid().ToString();
+            Id = Guid.CreateVersion7();
+            SecurityStamp = Guid.CreateVersion7().ToString();
         }
 
         public ApplicationUser(string userName) : this()

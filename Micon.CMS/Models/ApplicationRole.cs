@@ -7,7 +7,7 @@ namespace Micon.CMS.Models
     {
         public ApplicationRole()
         {
-            Id = Guid.NewGuid();
+            Id = Guid.CreateVersion7();
         }
         public ApplicationRole(string roleName) : this()
         {
