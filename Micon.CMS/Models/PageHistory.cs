@@ -12,6 +12,6 @@ namespace Micon.CMS.Models
         public Guid ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
 
-        DateTime Modified { get; set; } = DateTime.Now;
+        public DateTime Modified { get; set; } = DateTime.Now;
     }
 }
