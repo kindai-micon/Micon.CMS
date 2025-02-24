@@ -2,7 +2,7 @@
 
 namespace Micon.CMS.Models
 {
-    public class ComponentRelation
+    public class ComponentRelation: BaseModel
     {
         [ForeignKey(nameof(Parent))]
         public Guid ParentId { get; set; }

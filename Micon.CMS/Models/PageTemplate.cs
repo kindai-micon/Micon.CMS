@@ -1,6 +1,6 @@
 ﻿namespace Micon.CMS.Models
 {
-    public class PageTemplate
+    public class PageTemplate : BaseModel
     {
         
     }

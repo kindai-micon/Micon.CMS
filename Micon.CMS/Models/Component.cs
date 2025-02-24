@@ -1,6 +1,6 @@
 ﻿namespace Micon.CMS.Models
 {
-    public class Component
+    public class Component: BaseModel
     {
     }
 }
