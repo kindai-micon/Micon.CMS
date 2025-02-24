@@ -6,6 +6,7 @@
         {
             PackageId = Guid.CreateVersion7();
         }
+
         public Guid PackageId { get; set; }
     }
 }

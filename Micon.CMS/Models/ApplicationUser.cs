@@ -15,6 +15,7 @@ namespace Micon.CMS.Models
         {
             UserName = userName;
         }
+
         [ForeignKey(nameof(Tenant))]
         public Guid TenantKey { get; set; }
         public Tenant Tenant { get; init; }

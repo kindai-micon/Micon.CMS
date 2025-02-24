@@ -6,6 +6,5 @@ namespace Micon.CMS.Models
     {
         [Column(TypeName = "varchar(256)")]
         public string Name { get; set; }
-
     }
 }
