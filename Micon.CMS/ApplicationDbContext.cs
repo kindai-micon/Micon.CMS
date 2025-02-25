@@ -89,9 +89,9 @@ namespace Micon.CMS
                     .WithMany(t => t.Children)
                     .HasForeignKey(t => t.ChildId);
 
-                builder.HasOne(t=>t.ComponentSetting)
+                builder.HasMany(t=>t.ComponentSettings)
                     .WithOne(t => t.ComponentRelation)
-                    .HasForeignKey<ComponentSetting>(t=>t.ComponentRelationId);
+                    .HasForeignKey(t=>t.ComponentRelationId);
             });
 
             modelBuilder.Entity<Component>(builder =>

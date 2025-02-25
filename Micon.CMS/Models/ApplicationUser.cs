@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Micon.CMS.Models
@@ -15,7 +16,7 @@ namespace Micon.CMS.Models
         {
             UserName = userName;
         }
-
+        [Required]
         [ForeignKey(nameof(Tenant))]
         public Guid TenantId { get; set; }
         public Tenant Tenant { get; init; }
