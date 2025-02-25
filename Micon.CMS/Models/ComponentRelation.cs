@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Micon.CMS.Models
 {
@@ -7,11 +8,12 @@ namespace Micon.CMS.Models
         [ForeignKey(nameof(Parent))]
         public Guid ParentId { get; set; }
         public Component Parent { get; set; }
-
+        [Required]
         [ForeignKey(nameof(Child))]
         public Guid ChildId { get; set; }
-        public Component Child { get; set; }
+        public Component? Child { get; set; }
+        [Required]
         public int Order { get; set; }
-        public ComponentSetting ComponentSetting { get; set; }
+        public List<ComponentSetting> ComponentSettings { get; set; }
     }
 }

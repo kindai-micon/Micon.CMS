@@ -7,7 +7,8 @@ namespace Micon.CMS.Models
     {
         [Key]
         public Guid Id { get; set; }
-        [Column(TypeName = "varchar(512)")]
+        [Required]
+        [StringLength(256)]
         public string TenantName { get; set; }
     }
 }

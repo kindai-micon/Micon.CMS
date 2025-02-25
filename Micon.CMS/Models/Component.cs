@@ -1,4 +1,6 @@
-﻿namespace Micon.CMS.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Micon.CMS.Models
 {
     public class Component: BaseModel
     {
@@ -6,7 +8,7 @@
         {
             PackageId = Guid.CreateVersion7();
         }
-
+        [Required]
         public Guid PackageId { get; set; }
         
         public List<ComponentRelation> Parents { get; set; } = new List<ComponentRelation>();

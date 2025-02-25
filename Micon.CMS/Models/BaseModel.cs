@@ -15,6 +15,10 @@ namespace Micon.CMS.Models
         [ForeignKey(nameof(Tenant))]
         public Guid TenantId { get; set; }
         public Tenant Tenant { get;set; }
+        [Required]
+        public DateTimeOffset Modified { get; set; } = DateTimeOffset.Now;
+        [Required]
+        public DateTimeOffset Created { get; set; } = DateTimeOffset.Now;
 
     }
 }

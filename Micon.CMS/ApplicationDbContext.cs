@@ -11,6 +11,10 @@ namespace Micon.CMS
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
+
+        public ApplicationDbContext():base()
+        {
+        }
         public DbSet<Tenant> Tenants { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<ApplicationRole> ApplicationRoles { get; set; }
@@ -37,7 +41,7 @@ namespace Micon.CMS
             {
                 builder.HasIndex(Page => Page.Id);
                 builder.HasIndex(Page => Page.TenantId);
-                builder.HasIndex(Page => Page.PageTemplate);
+                builder.HasIndex(Page => Page.PageTemplateId);
                 builder.HasOne(t => t.PageTemplate)
                     .WithMany(t => t.Pages)
                     .HasForeignKey(t => t.PageTemplateId);
@@ -89,9 +93,9 @@ namespace Micon.CMS
                     .WithMany(t => t.Children)
                     .HasForeignKey(t => t.ChildId);
 
-                builder.HasOne(t=>t.ComponentSetting)
+                builder.HasMany(t=>t.ComponentSettings)
                     .WithOne(t => t.ComponentRelation)
-                    .HasForeignKey<ComponentSetting>(t=>t.ComponentRelationId);
+                    .HasForeignKey(t=>t.ComponentRelationId);
             });
 
             modelBuilder.Entity<Component>(builder =>
