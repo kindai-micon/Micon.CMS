@@ -2,6 +2,7 @@ using ClassLibrary1.Components.Test;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
@@ -43,6 +44,10 @@ namespace Micon.CMS
                         });
                 });
             }
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseNpgsql(builder.Configuration.GetConnectionString("ApplicationDbContext"));
+            });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
