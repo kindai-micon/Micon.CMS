@@ -1,10 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Micon.CMS.Models
 {
     public class PageTemplate : BaseModel
     {
-        [Column(TypeName = "varchar(256)")]
+        [Required]
+        [StringLength(256)]
         public string Name { get; set; }
+        public List<PageCategory> PageCategories { get; set; }
+        public List<Page> Pages { get; set; }
+        public List<PageTemplateHistory> PageTemplateHistories { get; set; }
     }
 }

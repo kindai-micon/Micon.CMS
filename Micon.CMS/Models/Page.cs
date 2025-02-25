@@ -10,5 +10,6 @@ namespace Micon.CMS.Models
         [ForeignKey(nameof(PageTemplate))]
         public Guid PageTemplateId { get; set; }
         public PageTemplate PageTemplate { get; set; }
+        public List<PageHistory> PageHistories { get; set; }
     }
 }

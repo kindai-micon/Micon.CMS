@@ -1,5 +1,7 @@
 ﻿using Micon.CMS.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using System.Linq;
 using System.Security.Cryptography.Pkcs;
 
 namespace Micon.CMS
@@ -23,6 +25,81 @@ namespace Micon.CMS
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Tenant>(builder =>
+            {
+                builder.HasIndex(Tenant => Tenant.TenantName)
+                    .IsUnique();
+                builder.HasIndex(Tenant => Tenant.Id);
+            });
+
+            modelBuilder.Entity<Page>(builder =>
+            {
+                builder.HasIndex(Page => Page.Id);
+                builder.HasIndex(Page => Page.TenantId);
+                builder.HasIndex(Page => Page.PageTemplate);
+                builder.HasOne(t => t.PageTemplate)
+                    .WithMany(t => t.Pages)
+                    .HasForeignKey(t => t.PageTemplateId);
+            });
+
+            modelBuilder.Entity<PageTemplate>(builder =>
+            {
+                builder.HasIndex(PageTemplate => PageTemplate.Id);
+                builder.HasIndex(PageTemplate => PageTemplate.TenantId);
+                builder.HasMany(t => t.PageCategories)
+                    .WithOne(t => t.PageTemplate)
+                    .HasForeignKey(t => t.PageTemplateId);
+            });
+
+            modelBuilder.Entity<PageTemplateHistory>(builder =>
+            {
+                builder.HasOne(t => t.PageTemplate)
+                    .WithMany(t => t.PageTemplateHistories)
+                    .HasForeignKey(t => t.PageTemplateId);
+            });
+
+            modelBuilder.Entity<PageCategory>(builder =>
+            {
+                builder.HasIndex(PageCategory => PageCategory.Id);
+                builder.HasIndex(PageCategory => PageCategory.TenantId);
+            });
+
+            modelBuilder.Entity<PageHistory>(builder =>
+            {
+                builder.HasIndex(PageHistory => PageHistory.Id);
+                builder.HasIndex(PageHistory => PageHistory.TenantId);
+                builder.HasIndex(PageHistory => PageHistory.PageId);
+                builder.HasOne(t => t.Page)
+                    .WithMany(t => t.PageHistories)
+                    .HasForeignKey(t => t.PageId);
+            });
+
+            modelBuilder.Entity<ComponentRelation>(builder =>
+            {
+                builder.HasIndex(t=>t.TenantId);
+                builder.HasIndex(t =>t.ChildId);
+                builder.HasIndex(t => t.ParentId);
+
+                builder.HasOne(t => t.Parent)
+                    .WithMany(t => t.Parents)
+                    .HasForeignKey(t => t.ParentId);
+
+                builder.HasOne(t => t.Child)
+                    .WithMany(t => t.Children)
+                    .HasForeignKey(t => t.ChildId);
+
+                builder.HasOne(t=>t.ComponentSetting)
+                    .WithOne(t => t.ComponentRelation)
+                    .HasForeignKey<ComponentSetting>(t=>t.ComponentRelationId);
+            });
+
+            modelBuilder.Entity<Component>(builder =>
+            {
+                builder.HasIndex(t => t.TenantId);
+                builder.HasIndex(t => t.Id);
+            });
+             
         }
     }
 }

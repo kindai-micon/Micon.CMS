@@ -11,7 +11,7 @@ namespace Micon.CMS.Models
         [ForeignKey(nameof(ApplicationUser))]
         public Guid ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
-
+        public DateTime Created { get; set; } = DateTime.Now;
         public DateTime Modified { get; set; } = DateTime.Now;
     }
 }
