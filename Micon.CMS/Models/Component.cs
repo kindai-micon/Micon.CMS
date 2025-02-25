@@ -8,5 +8,8 @@
         }
 
         public Guid PackageId { get; set; }
+        
+        public List<ComponentRelation> Parents { get; set; } = new List<ComponentRelation>();
+        public List<ComponentRelation> Children { get; set; } = new List<ComponentRelation>();
     }
 }

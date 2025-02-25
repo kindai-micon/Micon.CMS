@@ -11,7 +11,7 @@ namespace Micon.CMS.Models
         [ForeignKey(nameof(Child))]
         public Guid ChildId { get; set; }
         public Component Child { get; set; }
-
         public int Order { get; set; }
+        public ComponentSetting ComponentSetting { get; set; }
     }
 }
