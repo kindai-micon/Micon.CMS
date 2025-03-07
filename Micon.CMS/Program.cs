@@ -1,5 +1,7 @@
 using ClassLibrary1.Components.Test;
+using Micon.CMS.Models;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.EntityFrameworkCore;
@@ -44,10 +46,26 @@ namespace Micon.CMS
                         });
                 });
             }
+            Console.WriteLine(builder.Configuration.GetConnectionString("micon-cms-db"));
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseNpgsql(builder.Configuration.GetConnectionString("ApplicationDbContext"));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("micon-cms-db"));
             });
+            builder.Services.AddAuthentication(o =>
+            {
+                o.DefaultScheme = IdentityConstants.ApplicationScheme;
+                o.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+            })
+            .AddIdentityCookies(o => { });
+            builder.Services.AddIdentityCore<ApplicationUser>(o =>
+            {
+                o.Stores.MaxLengthForKeys = 128;
+                o.User.RequireUniqueEmail = false;
+            })
+                .AddDefaultTokenProviders()
+                .AddRoles<ApplicationRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -79,7 +97,11 @@ namespace Micon.CMS
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
-
+            using(var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                context.Database.Migrate();
+            }
             app.Run();
         }
     }

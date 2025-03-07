@@ -1,6 +1,8 @@
 ﻿using Micon.CMS.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Logging.Abstractions;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
 using System.Linq;
 using System.Security.Cryptography.Pkcs;
 
@@ -104,6 +106,13 @@ namespace Micon.CMS
                 builder.HasIndex(t => t.Id);
             });
              
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+
+            //optionsBuilder.ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
         }
     }
 }

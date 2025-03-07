@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Micon.CMS", "Micon.CMS\Mico
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibrary1", "ClassLibrary1\ClassLibrary1.csproj", "{5E1C81B8-69CD-493D-B881-BB0C8544F0E7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Micon.CMS.AppHost", "Micon.CMS.Aspire\Micon.CMS.Aspire.AppHost\Micon.CMS.AppHost.csproj", "{2631C9D8-2AF5-46BA-BC37-558591BD9DCC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Micon.CMS.ServiceDefaults", "Micon.CMS.Aspire\Micon.CMS.Aspire.ServiceDefaults\Micon.CMS.ServiceDefaults.csproj", "{56E506AB-DA2A-0FD7-29FE-7CE3B2885FE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,8 +25,19 @@ Global
 		{5E1C81B8-69CD-493D-B881-BB0C8544F0E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E1C81B8-69CD-493D-B881-BB0C8544F0E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E1C81B8-69CD-493D-B881-BB0C8544F0E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2631C9D8-2AF5-46BA-BC37-558591BD9DCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2631C9D8-2AF5-46BA-BC37-558591BD9DCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2631C9D8-2AF5-46BA-BC37-558591BD9DCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2631C9D8-2AF5-46BA-BC37-558591BD9DCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56E506AB-DA2A-0FD7-29FE-7CE3B2885FE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56E506AB-DA2A-0FD7-29FE-7CE3B2885FE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56E506AB-DA2A-0FD7-29FE-7CE3B2885FE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56E506AB-DA2A-0FD7-29FE-7CE3B2885FE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E15608B0-B115-4660-9945-2A06010DC387}
 	EndGlobalSection
 EndGlobal
