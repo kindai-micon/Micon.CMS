@@ -112,7 +112,7 @@ namespace Micon.CMS
         {
             base.OnConfiguring(optionsBuilder);
 
-            //optionsBuilder.ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
+            optionsBuilder.ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
         }
     }
 }
