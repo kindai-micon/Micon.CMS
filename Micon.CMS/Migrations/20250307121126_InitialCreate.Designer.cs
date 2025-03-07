@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Micon.CMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250307055436_InitialCreate")]
+    [Migration("20250307121126_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -278,6 +278,9 @@ namespace Micon.CMS.Migrations
 
                     b.Property<Guid>("ApplicationUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
