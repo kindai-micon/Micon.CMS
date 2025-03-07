@@ -20,16 +20,16 @@ namespace Micon.CMS
             // 通常のテーブル作成SQLを生成
             base.Generate(operation, model, builder, terminate);
 
-            if(operation.Name.ToLower() != "__EFMigrationsHistory" && operation.Name != "Tenants" && operation.Name != "ApplicationRoles" && operation.Name != "Tenants" && operation.Name != "ApplicationUsers")
+            if(operation.Name.ToLower() != "__EFMigrationsHistory" && operation.Name != "Tenants" )
             {
                 // RLS を適用する SQL を追加
 
                 builder.AppendLine($@"
-                ALTER TABLE {operation.Name} ENABLE ROW LEVEL SECURITY;
+                ALTER TABLE ""{operation.Name}"" ENABLE ROW LEVEL SECURITY;
                 CREATE POLICY tenant_policy
-                ON {operation.Name}
-                FOR SELECT, INSERT, UPDATE, DELETE
-                USING (TenantId = current_setting('app.current_tenant'::UUID));
+                ON ""{operation.Name}""
+                FOR ALL
+                USING (""TenantId"" = current_setting('app.current_tenant')::uuid);
             ");
             }
             else
