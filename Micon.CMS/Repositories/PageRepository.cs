@@ -1,6 +1,13 @@
-﻿namespace Micon.CMS.Repositories
+﻿using Micon.CMS.Models;
+
+namespace Micon.CMS.Repositories
 {
-    public class PageRepository:IPageRepository
+    public class PageRepository(ApplicationDbContext dbContext):IPageRepository
     {
+        
+        public Page Create(Page page)
+        {
+            
+        }
     }
 }
