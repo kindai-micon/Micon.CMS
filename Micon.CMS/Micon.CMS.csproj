@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <Folder Include="ViewComponent\v1\" />
+    <Folder Include="Views\Profile\" />
   </ItemGroup>
 
   <ItemGroup>
