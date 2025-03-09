@@ -75,7 +75,7 @@ namespace Micon.CMS.Repositories
         {
             model.Modified = DateTimeOffset.Now;
             var newModel = dbContext.Update(model).Entity;
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync(cancellationToken);
             return newModel;
         }
     }

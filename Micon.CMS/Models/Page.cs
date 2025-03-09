@@ -10,6 +10,8 @@ namespace Micon.CMS.Models
         public string Title { get;set; }
         [Required]
         [ForeignKey(nameof(PageTemplate))]
+        
+        public string Description { get; set; }
         public Guid PageTemplateId { get; set; }
         public PageTemplate PageTemplate { get; set; }
         public List<PageHistory> PageHistories { get; set; }

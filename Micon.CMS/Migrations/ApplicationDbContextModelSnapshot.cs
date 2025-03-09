@@ -208,6 +208,10 @@ namespace Micon.CMS.Migrations
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset>("Modified")
                         .HasColumnType("timestamp with time zone");
 
@@ -250,17 +254,12 @@ namespace Micon.CMS.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<Guid>("PageTemplateId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Id");
-
-                    b.HasIndex("PageTemplateId");
 
                     b.HasIndex("TenantId");
 
@@ -310,6 +309,9 @@ namespace Micon.CMS.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("ComponentRelationId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
 
@@ -321,12 +323,20 @@ namespace Micon.CMS.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<Guid>("PageCategoryId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ComponentRelationId");
+
                     b.HasIndex("Id");
+
+                    b.HasIndex("PageCategoryId")
+                        .IsUnique();
 
                     b.HasIndex("TenantId");
 
@@ -341,6 +351,9 @@ namespace Micon.CMS.Migrations
 
                     b.Property<Guid>("ApplicationUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
@@ -370,6 +383,9 @@ namespace Micon.CMS.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("TenantName")
                         .IsRequired()
@@ -494,19 +510,11 @@ namespace Micon.CMS.Migrations
 
             modelBuilder.Entity("Micon.CMS.Models.PageCategory", b =>
                 {
-                    b.HasOne("Micon.CMS.Models.PageTemplate", "PageTemplate")
-                        .WithMany("PageCategories")
-                        .HasForeignKey("PageTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("PageTemplate");
 
                     b.Navigation("Tenant");
                 });
@@ -540,11 +548,27 @@ namespace Micon.CMS.Migrations
 
             modelBuilder.Entity("Micon.CMS.Models.PageTemplate", b =>
                 {
+                    b.HasOne("Micon.CMS.Models.ComponentRelation", "ComponentRelation")
+                        .WithMany("PageTemplates")
+                        .HasForeignKey("ComponentRelationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Micon.CMS.Models.PageCategory", "PageCategory")
+                        .WithOne("PageTemplate")
+                        .HasForeignKey("Micon.CMS.Models.PageTemplate", "PageCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ComponentRelation");
+
+                    b.Navigation("PageCategory");
 
                     b.Navigation("Tenant");
                 });
@@ -586,6 +610,8 @@ namespace Micon.CMS.Migrations
             modelBuilder.Entity("Micon.CMS.Models.ComponentRelation", b =>
                 {
                     b.Navigation("ComponentSettings");
+
+                    b.Navigation("PageTemplates");
                 });
 
             modelBuilder.Entity("Micon.CMS.Models.Page", b =>
@@ -593,10 +619,14 @@ namespace Micon.CMS.Migrations
                     b.Navigation("PageHistories");
                 });
 
+            modelBuilder.Entity("Micon.CMS.Models.PageCategory", b =>
+                {
+                    b.Navigation("PageTemplate")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Micon.CMS.Models.PageTemplate", b =>
                 {
-                    b.Navigation("PageCategories");
-
                     b.Navigation("PageTemplateHistories");
 
                     b.Navigation("Pages");

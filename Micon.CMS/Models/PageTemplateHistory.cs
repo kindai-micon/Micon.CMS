@@ -13,6 +13,7 @@ namespace Micon.CMS.Models
         [ForeignKey(nameof(ApplicationUser))]
         public Guid ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
-        
+        public string? Comment { get; set; }
+
     }
 }

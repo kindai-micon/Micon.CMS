@@ -2,11 +2,13 @@
 
 namespace Micon.CMS.Repositories
 {
-    public interface IPageRepository:IBaseRepository<Page>
+    public interface IPageRepository : IBaseRepository<Page>
     {
-        PageTemplate? GetPageTemplate(Page page);
-        List<PageHistory> GetPageHistories(Page page);
-        void AddPageHistory(Page page, ApplicationUser user, string comment = null);
+        Task<PageTemplate?> GetPageTemplateAsync(Page page, CancellationToken cancellationToken);
+        Task<List<PageHistory>> GetPageHistoriesAsync(Page page, CancellationToken cancellationToken);
+        Task AddPageHistoryAsync(Page page, ApplicationUser user, string comment, CancellationToken cancellationToken);
+        Task AddPageHistoryAsync(Page page, ApplicationUser user, CancellationToken cancellationToken);
+        Task<List<Page>> GetPagesByTemplateAsync(PageTemplate pageTemplate, CancellationToken cancellationToken);
 
     }
 }

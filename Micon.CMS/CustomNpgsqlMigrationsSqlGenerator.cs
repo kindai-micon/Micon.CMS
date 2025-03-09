@@ -29,8 +29,16 @@ namespace Micon.CMS
                 CREATE POLICY tenant_policy
                 ON ""{operation.Name}""
                 FOR ALL
-                USING (""TenantId"" = current_setting('app.current_tenant')::uuid);
-            ");
+                USING (
+                    ""TenantId"" = current_setting('app.current_tenant')::uuid
+                    OR  (
+                        current_setting('app.current_tenant')::uuid IN (
+                            SELECT ""Id""
+                            FROM ""Tenants""
+                            WHERE ""IsAdmin"" = TRUE
+                            )
+                    )
+                );");
             }
             else
             {
