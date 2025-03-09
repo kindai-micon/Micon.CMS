@@ -3,10 +3,18 @@
 *@
 @{
 }
-<h1>プロフィール</h1>
-<torm>
-    <label>usename </label>
-    <input type="text" /><br />
-    <label>password</label>
-    <input type="text" />
-</torm>
+
+<form asp-controller="Plofile" asp-action="plofile" method="post">
+  <div>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" />
+  </div>
+  <div>
+      <label for="oldpassword">Oldpassword:</label>
+      <input type="password" id="oldpassword" name="oldpassword" />
+  </div>
+  <div>
+      <label for="newpassword">Newpassword:</label>
+      <input type="password" id="newpassword" name="newpassword" />
+  </div>
+</form>
