@@ -1,0 +1,20 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Micon.CMS.Models.form.EditProfileModel;
+<form asp-controller="Plofile" asp-action="plofile" method="post">
+  <div>
+      <label for="username">UserName:</label>
+      <input type="text" id="username" name="username" asp-for="UserName"/>
+  </div>
+  <div>
+      <label for="password">OldPassword:</label>
+      <input type="password" id="password" name="password" asp-for="Password" />
+  </div>
+  <div>
+      <label for="newpassword">NewPassword:</label>
+      <input type="password" id="newpassword" name="newpassword" asp-for="NewPassword" />
+  </div>
+</form>
