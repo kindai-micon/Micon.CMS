@@ -1,0 +1,62 @@
+﻿body {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* サイドメニューのスタイル */
+.sidebar {
+    width: 250px;
+    background: var(--pico-background-color);
+    padding: 1rem;
+    border-right: 1px solid var(--pico-muted-border-color);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100%;
+}
+
+.content {
+    flex: 1;
+    margin-left: 250px; /* サイドメニューの幅と同じ */
+    padding: 2rem;
+}
+.menu-toggle {
+    display: none;
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: var(--pico-primary);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.space-left {
+    margin-left: 250px;
+}
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -250px;
+        transition: left 0.3s;
+    }
+
+    .content {
+        margin-left: 0;
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
+    .open {
+        left: 0;
+    }
+    .menu-toggle {
+        display: block;
+    }
+    .space-left {
+        margin-left: 0px;
+    }
+}
+
