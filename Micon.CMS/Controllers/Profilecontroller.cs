@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Micon.CMS.Models;
-using Micon.CMS.Models.form;
 using Microsoft.AspNetCore.Identity;
+using Micon.CMS.Models.Form;
 namespace Micon.CMS.Controllers
 {
     public class ProfileController(UserManager<ApplicationUser> userManager,SignInManager<ApplicationUser> signInManager) : Controller
@@ -20,8 +20,14 @@ namespace Micon.CMS.Controllers
             var passwordOk = await userManager.CheckPasswordAsync(user,model.Password);
             if (passwordOk)
             {
-                var result =await user
+                var result =await userManager.ChangePasswordAsync(user, model.Password, model.NewPassword);
+                if(result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+
             }
+            return View("Login/Index");
         }
   
     }
