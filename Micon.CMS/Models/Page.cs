@@ -15,5 +15,6 @@ namespace Micon.CMS.Models
         public Guid PageTemplateId { get; set; }
         public PageTemplate PageTemplate { get; set; }
         public List<PageHistory> PageHistories { get; set; }
+        public long ViewCount { get; set; }
     }
 }

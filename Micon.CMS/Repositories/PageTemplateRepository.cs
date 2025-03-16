@@ -8,15 +8,17 @@ namespace Micon.CMS.Repositories
 
         public Task<List<PageCategory>> GetPageCategoriesAsync(PageTemplate pageTemplate, CancellationToken cancellationToken)
         {
-            
+            return dbContext.PageTemplates.Where(x => x.Id == pageTemplate.Id)
+                .Select(x => x.PageCategory)
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<ComponentHierarchy>> GetAllChildComponentsFromPageTemplateWithCTE(PageTemplate pageTemplate)
+        public async Task<List<ComponentHierarchy>> GetComponentHierarchy(PageTemplate pageTemplate, CancellationToken cancellationToken)
         {
             // 再帰的CTEを使用してすべての子コンポーネントを取得
             var components = await dbContext.Set<ComponentHierarchy>()
                 .FromSqlRaw(_componentHierarchyQuery, pageTemplate.Id)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return components;
         }
