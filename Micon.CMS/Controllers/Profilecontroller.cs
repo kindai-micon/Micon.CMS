@@ -20,9 +20,14 @@ namespace Micon.CMS.Controllers
             var passwordOk = await userManager.CheckPasswordAsync(user,model.Password);
             if (passwordOk)
             {
-                var result =await signInManager.PasswordSignInAsync(user, model.Password, true, false);
+                var result =await userManager.ChangePasswordAsync(user, model.Password, model.NewPassword);
+                if(result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+
             }
-            return View("Index");
+            return View("Login/Index");
         }
   
     }
