@@ -1,4 +1,5 @@
 ﻿using Micon.CMS.Models;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace Micon.CMS.Repositories
@@ -59,5 +60,18 @@ namespace Micon.CMS.Repositories
 
         SELECT * FROM ComponentHierarchy;
             ";
+        
+        public async Task SetPageTemplateComponentAsync(PageTemplate pageTemplate, ComponentRelation componentRelation, CancellationToken cancellationToken)
+        {
+            pageTemplate.ComponentRelationId = componentRelation.Id;
+            await UpdateAsync(pageTemplate, cancellationToken);
+        }
+        public async Task SetPageTemplateComponentAsync(Guid pageTemplateId, ComponentRelation componentRelation, CancellationToken cancellationToken)
+        {
+            PageTemplate pageTemplate = await dbContext.PageTemplates.Where(x => x.Id == pageTemplateId).FirstOrDefaultAsync(cancellationToken);
+            pageTemplate.ComponentRelationId= componentRelation.Id;
+            await UpdateAsync(pageTemplate, cancellationToken);
+        }
+
     }
 }

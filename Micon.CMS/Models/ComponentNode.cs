@@ -8,6 +8,5 @@
         }
         List<ComponentNode> Children { get; set; }
         string ComponentName { get; set; }
-        Guid ComponentId
     }
 }

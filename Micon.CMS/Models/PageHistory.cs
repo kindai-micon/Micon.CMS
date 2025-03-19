@@ -8,6 +8,8 @@ namespace Micon.CMS.Models
         [Required]
         [ForeignKey(nameof(Page))]
         public Guid PageId { get; set; }
+        
+        public string PageDisplayId { get; set; } = Guid.CreateVersion7().ToString();
         public Page Page { get; set; }
 
         [Required]

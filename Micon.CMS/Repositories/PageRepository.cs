@@ -99,48 +99,5 @@ namespace Micon.CMS.Repositories
                 .ToListAsync(cancellationToken);
         }
 
-        //public Task<Page?> GetByIdWithComponents(Guid guid)
-        //{
-        //    dbContext.Database.SqlQueryRaw<ComponentRelationHierarchyDto>(query,new NpgsqlParameter(,))
-        //}
-        string query = @"
-        WITH RECURSIVE ComponentHierarchy AS (
-            -- 基点となるコンポーネント（RelationはNULL）
-            SELECT 
-                c.""Id"" as ComponentId,
-                NULL::uuid as RelationId,
-                NULL::uuid as ParentId,
-                c.""PackageId"",
-                0 as ""Level"",
-                0 as ""Order""
-            FROM ""Components"" c
-            WHERE c.""Id"" = @startId
-
-            UNION ALL
-
-            -- 子コンポーネントとその関係を再帰的に取得
-            SELECT 
-                child.""Id"" as ComponentId,
-                cr.""Id"" as RelationId,
-                cr.""ParentId"",
-                child.""PackageId"",
-                ch.""Level"" + 1,
-                cr.""Order""
-            FROM ""ComponentRelations"" cr
-            INNER JOIN ""Components"" child ON cr.""ChildId"" = child.""Id""
-            INNER JOIN ComponentHierarchy ch ON cr.""ParentId"" = ch.ComponentId
-        )
-        SELECT 
-            h.ComponentId,
-            h.RelationId,
-            h.ParentId,
-            h.""Level"",
-            h.""Order"",
-            c.*,
-            r.*
-        FROM ComponentHierarchy h
-        JOIN ""Components"" c ON h.ComponentId = c.""Id""
-        LEFT JOIN ""ComponentRelations"" r ON h.RelationId = r.""Id""
-        ORDER BY h.""Level"", h.""Order"";";
     }
 }

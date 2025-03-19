@@ -15,7 +15,10 @@ namespace Micon.CMS.Models
         public ApplicationUser(string userName) : this()
         {
             UserName = userName;
+            DisplayName = userName;
         }
+        public string DisplayName { get; set; }
+
         [Required]
         [ForeignKey(nameof(Tenant))]
         public Guid TenantId { get; set; }
