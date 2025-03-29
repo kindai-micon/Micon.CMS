@@ -53,9 +53,12 @@ namespace Micon.CMS
             {
                 builder.HasIndex(PageTemplate => PageTemplate.Id);
                 builder.HasIndex(PageTemplate => PageTemplate.TenantId);
-                builder.HasMany(t => t.PageCategories)
-                    .WithOne(t => t.PageTemplate)
-                    .HasForeignKey(t => t.PageTemplateId);
+                builder.HasOne(t => t.PageCategory)
+                    .WithOne(t => t.PageTemplate);
+                builder.HasOne(t => t.ComponentRelation)
+                    .WithMany(t => t.PageTemplates)
+                    .HasForeignKey(x=>x.ComponentRelationId);
+
             });
 
             modelBuilder.Entity<PageTemplateHistory>(builder =>

@@ -10,5 +10,8 @@ namespace Micon.CMS.Models
         [Required]
         [StringLength(256)]
         public string TenantName { get; set; }
+
+        [Required]
+        public bool IsAdmin { get; set; } = false;
     }
 }
