@@ -3,6 +3,7 @@ using System;
 using Micon.CMS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Micon.CMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250308144446_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,10 +60,6 @@ namespace Micon.CMS.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("ConcurrencyStamp")
-                        .HasColumnType("text");
-
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
@@ -121,10 +120,6 @@ namespace Micon.CMS.Migrations
                     b.Property<DateTimeOffset>("Modified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<Guid>("PackageId")
                         .HasColumnType("uuid");
 
@@ -151,9 +146,6 @@ namespace Micon.CMS.Migrations
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsPriority")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("Modified")
                         .HasColumnType("timestamp with time zone");
@@ -190,37 +182,20 @@ namespace Micon.CMS.Migrations
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTimeOffset>("Modified")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("PageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("PageTemplateId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ComponentRelationId");
 
                     b.HasIndex("PageId");
-
-                    b.HasIndex("PageTemplateId");
 
                     b.HasIndex("TenantId");
 
@@ -253,9 +228,6 @@ namespace Micon.CMS.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
-
-                    b.Property<long>("ViewCount")
-                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -314,10 +286,6 @@ namespace Micon.CMS.Migrations
 
                     b.Property<DateTimeOffset>("Modified")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("PageDisplayId")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<Guid>("PageId")
                         .HasColumnType("uuid");
@@ -511,12 +479,6 @@ namespace Micon.CMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Micon.CMS.Models.PageTemplate", "PageTemplate")
-                        .WithMany()
-                        .HasForeignKey("PageTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
@@ -526,8 +488,6 @@ namespace Micon.CMS.Migrations
                     b.Navigation("ComponentRelation");
 
                     b.Navigation("Page");
-
-                    b.Navigation("PageTemplate");
 
                     b.Navigation("Tenant");
                 });

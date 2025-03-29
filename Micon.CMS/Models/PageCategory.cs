@@ -8,9 +8,7 @@ namespace Micon.CMS.Models
         [Required]
         [StringLength(256)]
         public string Name { get;set; }
-        [Required]
-        [ForeignKey(nameof(PageTemplate))]
-        public Guid PageTemplateId { get; set; }
+        
         public PageTemplate PageTemplate { get; set; }
     }
 }
