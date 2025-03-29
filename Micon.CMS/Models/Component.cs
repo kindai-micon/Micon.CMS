@@ -10,7 +10,7 @@ namespace Micon.CMS.Models
         }
         [Required]
         public Guid PackageId { get; set; }
-        
+        public string Name { get; set; }
         public List<ComponentRelation> Parents { get; set; } = new List<ComponentRelation>();
         public List<ComponentRelation> Children { get; set; } = new List<ComponentRelation>();
     }

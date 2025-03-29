@@ -16,7 +16,8 @@ namespace Micon.CMS.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false)
+                    TenantName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    IsAdmin = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -98,7 +99,7 @@ namespace Micon.CMS.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PageTemplates",
+                name: "PageCategories",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -109,9 +110,9 @@ namespace Micon.CMS.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PageTemplates", x => x.Id);
+                    table.PrimaryKey("PK_PageCategories", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PageTemplates_Tenants_TenantId",
+                        name: "FK_PageCategories_Tenants_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenants",
                         principalColumn: "Id",
@@ -154,27 +155,34 @@ namespace Micon.CMS.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PageCategories",
+                name: "PageTemplates",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    PageTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PageCategoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ComponentRelationId = table.Column<Guid>(type: "uuid", nullable: false),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
                     Modified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Created = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PageCategories", x => x.Id);
+                    table.PrimaryKey("PK_PageTemplates", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PageCategories_PageTemplates_PageTemplateId",
-                        column: x => x.PageTemplateId,
-                        principalTable: "PageTemplates",
+                        name: "FK_PageTemplates_ComponentRelations_ComponentRelationId",
+                        column: x => x.ComponentRelationId,
+                        principalTable: "ComponentRelations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_PageCategories_Tenants_TenantId",
+                        name: "FK_PageTemplates_PageCategories_PageCategoryId",
+                        column: x => x.PageCategoryId,
+                        principalTable: "PageCategories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PageTemplates_Tenants_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenants",
                         principalColumn: "Id",
@@ -187,6 +195,7 @@ namespace Micon.CMS.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
                     PageTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
                     Modified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -216,6 +225,7 @@ namespace Micon.CMS.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     PageTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
                     ApplicationUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Comment = table.Column<string>(type: "text", nullable: true),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
                     Modified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Created = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
@@ -284,6 +294,7 @@ namespace Micon.CMS.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     PageId = table.Column<Guid>(type: "uuid", nullable: false),
                     ApplicationUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Comment = table.Column<string>(type: "text", nullable: true),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
                     Modified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Created = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
@@ -367,11 +378,6 @@ namespace Micon.CMS.Migrations
                 column: "Id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PageCategories_PageTemplateId",
-                table: "PageCategories",
-                column: "PageTemplateId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_PageCategories_TenantId",
                 table: "PageCategories",
                 column: "TenantId");
@@ -427,9 +433,20 @@ namespace Micon.CMS.Migrations
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PageTemplates_ComponentRelationId",
+                table: "PageTemplates",
+                column: "ComponentRelationId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PageTemplates_Id",
                 table: "PageTemplates",
                 column: "Id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PageTemplates_PageCategoryId",
+                table: "PageTemplates",
+                column: "PageCategoryId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_PageTemplates_TenantId",
@@ -458,16 +475,10 @@ namespace Micon.CMS.Migrations
                 name: "ComponentSettings");
 
             migrationBuilder.DropTable(
-                name: "PageCategories");
-
-            migrationBuilder.DropTable(
                 name: "PageHistories");
 
             migrationBuilder.DropTable(
                 name: "PageTemplateHistories");
-
-            migrationBuilder.DropTable(
-                name: "ComponentRelations");
 
             migrationBuilder.DropTable(
                 name: "Pages");
@@ -476,10 +487,16 @@ namespace Micon.CMS.Migrations
                 name: "ApplicationUsers");
 
             migrationBuilder.DropTable(
-                name: "Components");
+                name: "PageTemplates");
 
             migrationBuilder.DropTable(
-                name: "PageTemplates");
+                name: "ComponentRelations");
+
+            migrationBuilder.DropTable(
+                name: "PageCategories");
+
+            migrationBuilder.DropTable(
+                name: "Components");
 
             migrationBuilder.DropTable(
                 name: "Tenants");
