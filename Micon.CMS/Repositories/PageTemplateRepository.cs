@@ -17,8 +17,7 @@ namespace Micon.CMS.Repositories
         public async Task<List<ComponentHierarchy>> GetComponentHierarchy(PageTemplate pageTemplate, CancellationToken cancellationToken)
         {
             // 再帰的CTEを使用してすべての子コンポーネントを取得
-            var components = await dbContext.Set<ComponentHierarchy>()
-                .FromSqlRaw(_componentHierarchyQuery, pageTemplate.Id)
+            var components = await dbContext.Database.SqlQueryRaw<ComponentHierarchy>(_componentHierarchyQuery, pageTemplate.Id)
                 .ToListAsync(cancellationToken);
 
             return components;
