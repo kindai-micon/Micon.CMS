@@ -78,5 +78,14 @@ namespace Micon.CMS.Repositories
             await dbContext.SaveChangesAsync(cancellationToken);
             return newModel;
         }
+
+        public virtual Task<List<T>> GetAllAsync(CancellationToken cancellationToken)
+        {
+            return dbContext.Set<T>().ToListAsync(cancellationToken);
+        }
+        public virtual List<T> GetAllAsync()
+        {
+            return dbContext.Set<T>().ToList();
+        }
     }
 }
