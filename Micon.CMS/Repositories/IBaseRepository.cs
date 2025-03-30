@@ -19,5 +19,9 @@ namespace Micon.CMS.Repositories
         public T? GetById(Guid guid);
         public Task<T?> GetByIdAsync(Guid guid, CancellationToken cancellationToken);
 
+        public Task<List<T>> GetAllAsync(CancellationToken cancellationToken);
+        public List<T> GetAllAsync();
+
+
     }
 }
