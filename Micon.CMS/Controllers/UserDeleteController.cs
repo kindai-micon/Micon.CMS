@@ -2,6 +2,7 @@
 using Micon.CMS.Models.Form;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Micon.CMS.Controllers
 {
@@ -13,13 +14,13 @@ namespace Micon.CMS.Controllers
         }
         [ValidateAntiForgeryToken]
         [HttpPost]
-        public async Task<IActionResult> Delete([Bind("Password")] LoginModel model)
+        public async Task<IActionResult> Delete([Bind("Password")] UserDeleteModel model)
         {
             var user = await userManager.GetUserAsync(User);
             var passward_ok = await userManager.CheckPasswordAsync(user,model.Password);
             if (passward_ok)
             {
-
+                var userlist = await userManager.Users.ToListAsync();
                 return RedirectToAction("Index", "Home");
             }
             else
