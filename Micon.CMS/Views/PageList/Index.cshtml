@@ -9,20 +9,41 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Name</th>
-            <th>PageCategories</th>
-            <th>.Pages</th>
-            <th>PageTemplateHistories</th>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Created)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Modified)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PageCategory.Name)
+            </th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var product in Model)
+        @foreach (var item in Model)
         {
             <tr>
-                <td>@product.Name</td>
-                <td>@product.PageCategories</td>
-                <td>@product.Pages</td>
-                <td>@product.PageTemplateHistories</td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Created)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Modified)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PageCategory.Name)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">編集</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">詳細</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">削除</a>
+                </td>
             </tr>
         }
     </tbody>

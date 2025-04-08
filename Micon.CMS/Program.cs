@@ -1,5 +1,6 @@
 using ClassLibrary1.Components.Test;
 using Micon.CMS.Models;
+using Micon.CMS.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -65,7 +66,7 @@ namespace Micon.CMS
                 .AddDefaultTokenProviders()
                 .AddRoles<ApplicationRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
-
+            builder.Services.AddScoped<IPageRepository, PageRepository>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
