@@ -20,7 +20,7 @@ namespace Micon.CMS.Controllers
             var passward_ok = await userManager.CheckPasswordAsync(user,model.Password);
             if (passward_ok)
             {
-                var userlist = await userManager.Users.ToListAsync();
+                await userManager.DeleteAsync(user);
                 return RedirectToAction("Index", "Home");
             }
             else
