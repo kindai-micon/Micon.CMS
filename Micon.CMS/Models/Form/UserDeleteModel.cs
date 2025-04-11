@@ -7,5 +7,8 @@ namespace Micon.CMS.Models.Form
     {
         [Required]
         public string Password { get; set; }
+        [Required]
+
+        public string UserId { get; set; }
     }
 }

@@ -14,13 +14,16 @@ namespace Micon.CMS.Controllers
         }
         [ValidateAntiForgeryToken]
         [HttpPost]
-        public async Task<IActionResult> Delete([Bind("Password")] UserDeleteModel model)
+        public async Task<IActionResult> Delete([Bind("Password,UserId")] UserDeleteModel model)
         {
             var user = await userManager.GetUserAsync(User);
             var passward_ok = await userManager.CheckPasswordAsync(user,model.Password);
+            var UserId = model.UserId;
+            var DeletedUser = await userManager.FindByIdAsync(UserId);
             if (passward_ok)
             {
-                await userManager.DeleteAsync(user);
+                
+                _=await userManager.DeleteAsync(DeletedUser);
                 return RedirectToAction("Index", "Home");
             }
             else
