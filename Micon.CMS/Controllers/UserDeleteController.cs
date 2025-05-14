@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Micon.CMS.Controllers
 {
-    public class UserDeleteController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) : Controller
+    public class UserDeleteController(UserManager<ApplicationUser> userManager) : Controller
     {
         public IActionResult Index()
         {
@@ -16,20 +16,20 @@ namespace Micon.CMS.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete([Bind("Password,UserId")] UserDeleteModel model)
         {
-            var user = await userManager.GetUserAsync(User);
-            var passward_ok = await userManager.CheckPasswordAsync(user,model.Password);
-            var UserId = model.UserId;
-            var DeletedUser = await userManager.FindByIdAsync(UserId);
-            if (passward_ok)
+            ApplicationUser Deleter = await userManager.GetUserAsync(User);
+            bool Passward_Ok = await userManager.CheckPasswordAsync(Deleter,model.Password);
+            string DeletedUserId = model.UserId;
+            ApplicationUser DeletedUser = await userManager.FindByIdAsync(DeletedUserId);
+            if (Passward_Ok)
             {
-                
-                _=await userManager.DeleteAsync(DeletedUser);
-                return RedirectToAction("Index", "Home");
+                var DeleteResult = await userManager.DeleteAsync(DeletedUser);
+                if (DeleteResult.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                return View("Delete/Index");
             }
-            else
-            {
-                return View("Index");
-            }
+            return View("Delete/Index");
         }
     }
 }
