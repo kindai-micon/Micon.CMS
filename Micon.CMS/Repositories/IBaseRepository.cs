@@ -1,4 +1,5 @@
 ﻿using Micon.CMS.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Micon.CMS.Repositories
 {
@@ -18,6 +19,8 @@ namespace Micon.CMS.Repositories
 
         public T? GetById(Guid guid);
         public Task<T?> GetByIdAsync(Guid guid, CancellationToken cancellationToken);
+        public Task<List<T>> GetAllAsync(CancellationToken cancellationToken);
+        public List<T> GetAllAsync();
 
         public Task<List<T>> GetAllAsync(CancellationToken cancellationToken);
         public List<T> GetAll();
