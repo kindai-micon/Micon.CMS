@@ -71,6 +71,9 @@ namespace Micon.CMS.Repositories
             pageTemplate.ComponentRelationId= componentRelation.Id;
             await UpdateAsync(pageTemplate, cancellationToken);
         }
-
+        public Task<List<PageTemplate>> GetAllWithCategoryAsync(CancellationToken cancellationToken)
+        {
+            return GetQueryableAsync(cancellationToken).Include(x => x.PageCategory).ToListAsync(cancellationToken);
+        }
     }
 }

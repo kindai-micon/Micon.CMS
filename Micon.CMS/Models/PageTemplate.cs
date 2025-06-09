@@ -15,7 +15,7 @@ namespace Micon.CMS.Models
         public List<Page> Pages { get; set; }
         public List<PageTemplateHistory> PageTemplateHistories { get; set; }
         [ForeignKey(nameof(ComponentRelation))]
-        public Guid ComponentRelationId { get; set; }
-        public ComponentRelation ComponentRelation { get; set; }
+        public Guid? ComponentRelationId { get; set; }
+        public ComponentRelation? ComponentRelation { get; set; }
     }
 }

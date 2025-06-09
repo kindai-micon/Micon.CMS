@@ -83,9 +83,14 @@ namespace Micon.CMS.Repositories
         {
             return dbContext.Set<T>().ToListAsync(cancellationToken);
         }
-        public virtual List<T> GetAllAsync()
+        public virtual List<T> GetAll()
         {
             return dbContext.Set<T>().ToList();
+        }
+
+        public virtual IQueryable<T> GetQueryableAsync(CancellationToken cancellationToken)
+        {
+            return dbContext.Set<T>().AsQueryable();
         }
     }
 }
