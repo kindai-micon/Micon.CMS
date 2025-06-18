@@ -1,0 +1,18 @@
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace Micon.CMS.Controllers
+{
+    public class UserManagementController : Controller
+    {
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        [HttpGet($"{nameof(User)}/{{id}}")]
+        public IActionResult User([FromRoute]String id)
+        {
+            return View();
+        }
+    }
+}

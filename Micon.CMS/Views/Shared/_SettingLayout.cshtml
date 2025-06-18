@@ -38,8 +38,11 @@
         <aside class="sidebar" :class="{ 'open':menuIsVisible }" @@click="menuIsVisible = true">
             <nav>
                 <ul>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a></li>
+                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ユーザー管理</a></li>
+                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ロール管理</a></li>
+                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">テンプレート管理</a></li>
+                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ページ管理</a></li>
+                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ログアウト</a></li>
                 </ul>
             </nav>
         </aside>
