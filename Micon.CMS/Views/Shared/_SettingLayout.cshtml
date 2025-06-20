@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Micon.CMS.styles.css" asp-append-version="true" />
     <!-- Compiled and minified CSS -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 </head>
 <body x-data="{ menuIsVisible:false }">
@@ -35,9 +36,9 @@
    
     
     <div>
-        <aside class="sidebar" :class="{ 'open':menuIsVisible }" @@click="menuIsVisible = true">
+        <aside :class="{ 'open':menuIsVisible }" @@click="menuIsVisible = true">
             <nav>
-                <ul>
+                <ul class="slidenav slidenav-fixed">
                     <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ユーザー管理</a></li>
                     <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ロール管理</a></li>
                     <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">テンプレート管理</a></li>
