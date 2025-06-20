@@ -9,7 +9,7 @@ namespace Micon.CMS.Controllers
             return View();
         }
 
-        [HttpGet($"{nameof(User)}/{{id}}")]
+        [HttpGet]
         public IActionResult User([FromRoute]String id)
         {
             return View();
