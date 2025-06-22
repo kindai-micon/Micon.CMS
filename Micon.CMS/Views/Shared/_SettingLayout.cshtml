@@ -14,16 +14,6 @@
 <body x-data="{ menuIsVisible:false }">
     <header class="navbar-fixed">
         <nav>
-            @* 以下のコメントアウトは削除してもいいですか？ *@
-            @*
-                <ul>
-                    <li>
-                        <a @@click="menuIsVisible = !menuIsVisible" class="menu-toggle" id="menu-toggle" @@click.outside="if(menuIsVisible ){menuIsVisible = false}">
-                            <img src="~/icon/feather/menu.svg">
-                        </a>
-                    <li />
-                </ul>
-            *@
             <div class="nav-wrapper">
                 <a href="#" class="brand-logo center">Micon.CMS</a>
                 <ul>
@@ -36,10 +26,6 @@
     </header>
    
     <main class="row">
-            @* 以下のコメントアウトも削除したいです *@
-            @*
-            <aside :class="{ 'open':menuIsVisible }" @@click="menuIsVisible = true">
-            *@
             <aside class="col s2">
                 <ul>
                     <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ユーザー管理</a></li>
@@ -50,11 +36,6 @@
                 </ul>
             </aside>
             <div role="main" class="col s10">
-                @* 以下のコメントアウトも削除したいです *@
-                @*
-                <main role="main" class="container-fluid">
-                </main>
-                *@
                     @RenderBody()
             </div>
 
