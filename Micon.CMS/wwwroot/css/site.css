@@ -20,3 +20,15 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.row-role-card {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 1rem;
+}
+
+.col-role-card {
+   width: calc((100% - 2rem) / 2);
+/*   box-sizing: border-box;*/
+}

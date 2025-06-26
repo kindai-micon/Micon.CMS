@@ -4,24 +4,28 @@
 
 <div class="container">
     <h1>ロール管理</h1>
-    <div class="row">
-        @* Create New Role Card Start *@
-        <div class="card col s4">
-            <div class="card-content">
-                <span class="card-title activator grey-text text-darken-4">ロール新規作成</span>
-                <input placeholder="ここに入力してください" id="new_role_name" type="text" class="validate">
-                <label for="new_role_name">新規ロール名</label>
-            </div>
-            <div class="card-action">
-                <div class="right-align">
-                    <button class="waves-effect waves-light btn blue darken-2">
-                        <i class="material-icons left">email</i>
-                        送信
-                    </button>
-                </div>
+    @* Create New Role Card Start *@
+    <div class="card">
+        <div class="card-content">
+            <span class="card-title activator grey-text text-darken-4">ロール新規作成</span>
+            <input placeholder="ここに入力してください" id="new_role_name" type="text" class="validate">
+            <label for="new_role_name">新規ロール名</label>
+        </div>
+        <div class="card-action">
+            <div class="right-align">
+                <button class="waves-effect waves-light btn green darken-2">
+                    <i class="material-icons left">add</i>
+                    新規作成
+                </button>
             </div>
         </div>
-        @* Create New Role Card End *@
+    </div>
+    @* Create New Role Card End *@
+    <div class="row-role-card">
+        @for (int i = 0; i < 5; i++)
+        {
+            @Html.Partial("_RoleManagementCard")
+        }
     </div>
 </div>
 
