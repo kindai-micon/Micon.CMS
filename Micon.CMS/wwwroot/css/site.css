@@ -29,6 +29,5 @@ body {
 }
 
 .col-role-card {
-   width: calc((100% - 2rem) / 2);
-/*   box-sizing: border-box;*/
+   width: calc((100% - 1rem) / 2);
 }
