@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Micon.CMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/@@picocss/pico@2.0.6/css/pico.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Micon.CMS.styles.css" asp-append-version="true" />
     <!-- Compiled and minified CSS -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Custom styles CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Micon.CMS.styles.css" asp-append-version="true" />
 </head>
 <body x-data="{ menuIsVisible:false }">
     <header class="navbar-fixed">
@@ -29,7 +29,7 @@
             <aside class="col s2">
                 <ul>
                     <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ユーザー管理</a></li>
-                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ロール管理</a></li>
+                    <li><a asp-area="" asp-controller="RoleManagement" asp-action="Index">ロール管理</a></li>
                     <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">テンプレート管理</a></li>
                     <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ページ管理</a></li>
                     <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ログアウト</a></li>

@@ -1,0 +1,33 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+<div class="container">
+    <h1>ロール管理</h1>
+    @* Create New Role Card Start *@
+    <div class="card">
+        <div class="card-content">
+            <span class="card-title activator grey-text text-darken-4">ロール新規作成</span>
+            <input placeholder="ここに入力してください" id="new_role_name" type="text" class="validate">
+            <label for="new_role_name">新規ロール名</label>
+        </div>
+        <div class="card-action">
+            <div class="right-align">
+                <button class="waves-effect waves-light btn green darken-2">
+                    <i class="material-icons left">add</i>
+                    新規作成
+                </button>
+            </div>
+        </div>
+    </div>
+    @* Create New Role Card End *@
+    <div class="row-role-card">
+        @for (int i = 0; i < 5; i++)
+        {
+            @Html.Partial("_RoleManagementCard")
+        }
+    </div>
+</div>
+
+@{
+}
