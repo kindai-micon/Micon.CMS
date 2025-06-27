@@ -19,9 +19,14 @@ namespace Micon.CMS
         {
             // 通常のテーブル作成SQLを生成
             base.Generate(operation, model, builder, terminate);
+            if(!operation.Columns.Where(x=>x.Name == "TenantId").Any())
+            {
+                return;
+            }
 
             if(operation.Name.ToLower() != "__EFMigrationsHistory" && operation.Name != "Tenants" )
             {
+                
                 // RLS を適用する SQL を追加
 
                 builder.AppendLine($@"
