@@ -6,8 +6,8 @@ namespace Micon.CMS.Models
     public class ComponentRelation: BaseModel
     {
         [ForeignKey(nameof(Parent))]
-        public Guid ParentId { get; set; }
-        public Component Parent { get; set; }
+        public Guid? ParentId { get; set; }
+        public Component? Parent { get; set; }
         [Required]
         [ForeignKey(nameof(Child))]
         public Guid ChildId { get; set; }

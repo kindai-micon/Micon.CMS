@@ -32,6 +32,12 @@ namespace Micon.CMS
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<ComponentHierarchy>(builder =>
+            {
+                builder.HasNoKey();
+                builder.ToView(null);
+            });
+
             modelBuilder.Entity<Tenant>(builder =>
             {
                 builder.HasIndex(Tenant => Tenant.TenantName)
