@@ -14,9 +14,9 @@
 <body x-data="{ menuIsVisible:false }">
     <header class="navbar-fixed">
         <nav>
-            <div class="nav-wrapper">
+            <div class="nav-wrapper teal darken-3">
                 <a href="#" class="brand-logo center">Micon.CMS</a>
-                <ul>
+                <ul class="right">
                     <li>
                         <a href="#">アカウント</a>
                     </li>
@@ -26,24 +26,24 @@
     </header>
    
     <main class="row">
-            <aside class="col s2">
-                <ul>
-                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ユーザー管理</a></li>
-                    <li><a asp-area="" asp-controller="RoleManagement" asp-action="Index">ロール管理</a></li>
-                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">テンプレート管理</a></li>
-                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ページ管理</a></li>
-                    <li><a asp-area="" asp-controller="UserManagement" asp-action="Index">ログアウト</a></li>
+        <aside class="col s2 collection">
+                <ul class="aside-menu">
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="UserManagement" asp-action="Index" class="teal-text">ユーザー管理</a></li>
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="RoleManagement" asp-action="Index" class="teal-text">ロール管理</a></li>
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="UserManagement" asp-action="Index" class="teal-text">テンプレート管理</a></li>
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="UserManagement" asp-action="Index" class="teal-text">ページ管理</a></li>
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="UserManagement" asp-action="Index" class="teal-text">ログアウト</a></li>
                 </ul>
-            </aside>
-            <div role="main" class="col s10">
-                    @RenderBody()
-            </div>
+        </aside>
+        <div role="main" class="col s10">
+                @RenderBody()
+        </div>
 
+        <footer class="container" style="text-align:center">
+                &copy; 2025 - Micon.CMS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </footer>
     </main>
 
-    <footer class="container" style="text-align:center">
-            &copy; 2025 - Micon.CMS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-    </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
