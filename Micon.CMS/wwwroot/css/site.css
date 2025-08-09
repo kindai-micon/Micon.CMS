@@ -14,9 +14,34 @@ html {
 
 html {
   position: relative;
-  min-height: 100%;
 }
 
-body {
-  margin-bottom: 60px;
+/* Aside Menu */
+
+main.row {
+    margin-bottom: 0;
+}
+
+aside {
+  height: auto;
+}
+
+.aside-menu li {
+    margin-bottom: 1rem;
+}
+
+.aside-menu li.active a {
+    color: white !important;
+}
+
+/* Role Management */
+.row-role-card {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 1rem;
+}
+
+.col-role-card {
+   width: calc((100% - 1rem) / 2);
 }
