@@ -245,7 +245,7 @@ namespace Micon.CMS.Migrations
                     b.Property<Guid>("PageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Type")
