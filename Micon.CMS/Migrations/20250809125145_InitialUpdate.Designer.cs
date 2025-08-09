@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Micon.CMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250809124437_fix-component")]
-    partial class fixcomponent
+    [Migration("20250809125145_InitialUpdate")]
+    partial class InitialUpdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,7 +40,7 @@ namespace Micon.CMS.Migrations
                     b.Property<string>("NormalizedName")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -131,7 +131,7 @@ namespace Micon.CMS.Migrations
                     b.Property<Guid>("PackageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -141,6 +141,51 @@ namespace Micon.CMS.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("Components");
+                });
+
+            modelBuilder.Entity("Micon.CMS.Models.ComponentHierarchy", b =>
+                {
+                    b.Property<Guid>("ChildComponentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ChildComponentName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ChildComponentPackageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ParentComponentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ParentComponentName")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ParentComponentPackageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("Micon.CMS.Models.ComponentRelation", b =>
@@ -164,10 +209,10 @@ namespace Micon.CMS.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("ParentId")
+                    b.Property<Guid?>("ParentId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -203,7 +248,7 @@ namespace Micon.CMS.Migrations
                     b.Property<Guid>("PageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Type")
@@ -244,7 +289,7 @@ namespace Micon.CMS.Migrations
                     b.Property<Guid>("PageTemplateId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Title")
@@ -283,7 +328,7 @@ namespace Micon.CMS.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -320,7 +365,7 @@ namespace Micon.CMS.Migrations
                     b.Property<Guid>("PageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -359,7 +404,7 @@ namespace Micon.CMS.Migrations
                     b.Property<Guid>("PageCategoryId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -397,7 +442,7 @@ namespace Micon.CMS.Migrations
                     b.Property<Guid>("PageTemplateId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -439,9 +484,7 @@ namespace Micon.CMS.Migrations
                 {
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TenantId");
 
                     b.Navigation("Tenant");
                 });
@@ -461,11 +504,26 @@ namespace Micon.CMS.Migrations
                 {
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
-                        .HasForeignKey("TenantId")
+                        .HasForeignKey("TenantId");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Micon.CMS.Models.ComponentHierarchy", b =>
+                {
+                    b.HasOne("Micon.CMS.Models.Component", "Child")
+                        .WithMany()
+                        .HasForeignKey("ChildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Tenant");
+                    b.HasOne("Micon.CMS.Models.Component", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId");
+
+                    b.Navigation("Child");
+
+                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("Micon.CMS.Models.ComponentRelation", b =>
@@ -478,15 +536,11 @@ namespace Micon.CMS.Migrations
 
                     b.HasOne("Micon.CMS.Models.Component", "Parent")
                         .WithMany("Parents")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ParentId");
 
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TenantId");
 
                     b.Navigation("Child");
 
@@ -511,9 +565,7 @@ namespace Micon.CMS.Migrations
 
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TenantId");
 
                     b.Navigation("Component");
 
@@ -532,9 +584,7 @@ namespace Micon.CMS.Migrations
 
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TenantId");
 
                     b.Navigation("PageTemplate");
 
@@ -545,9 +595,7 @@ namespace Micon.CMS.Migrations
                 {
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TenantId");
 
                     b.Navigation("Tenant");
                 });
@@ -568,9 +616,7 @@ namespace Micon.CMS.Migrations
 
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TenantId");
 
                     b.Navigation("ApplicationUser");
 
@@ -593,9 +639,7 @@ namespace Micon.CMS.Migrations
 
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TenantId");
 
                     b.Navigation("ComponentRelation");
 
@@ -620,9 +664,7 @@ namespace Micon.CMS.Migrations
 
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TenantId");
 
                     b.Navigation("ApplicationUser");
 
