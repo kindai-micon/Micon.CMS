@@ -1,0 +1,27 @@
+﻿@page
+@model Micon.CMS.Views.UserManagement.IndexModel
+
+<div class="container">
+    <h3>ユーザー管理</h3>
+    @* Card Component Start *@
+    <div class="card">
+        <div class="card-content">
+            @* FIX: UserName *@
+            <span class="card-title activator grey-text text-darken-4">UserName</span>
+            @* FIX: Role *@
+            <p>ロール：DUMMY, DUMMY</p>
+        </div>
+        <div class="card-action">
+            <div class="right-align">
+                <a class="waves-effect waves-light btn grey darken-1" asp-area="" asp-controller="UserManagement" asp-action="User" asp-route-id="123">
+                    <i class="material-icons left">settings</i>設定
+                </a>
+                <a class="waves-effect waves-light btn red darken-2"><i class="material-icons left">clear</i>削除</a>
+            </div>
+        </div>
+    </div>
+    @* Card Component End *@
+</div>
+
+@{
+}

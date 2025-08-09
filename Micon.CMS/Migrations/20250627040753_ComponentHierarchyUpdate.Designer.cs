@@ -3,6 +3,7 @@ using System;
 using Micon.CMS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Micon.CMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250627040753_ComponentHierarchyUpdate")]
+    partial class ComponentHierarchyUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -229,7 +232,7 @@ namespace Micon.CMS.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ComponentId")
+                    b.Property<Guid>("ComponentRelationId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("Created")
@@ -245,7 +248,10 @@ namespace Micon.CMS.Migrations
                     b.Property<Guid>("PageId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid>("PageTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Type")
@@ -258,9 +264,11 @@ namespace Micon.CMS.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ComponentId");
+                    b.HasIndex("ComponentRelationId");
 
                     b.HasIndex("PageId");
+
+                    b.HasIndex("PageTemplateId");
 
                     b.HasIndex("TenantId");
 
@@ -548,9 +556,9 @@ namespace Micon.CMS.Migrations
 
             modelBuilder.Entity("Micon.CMS.Models.ComponentSetting", b =>
                 {
-                    b.HasOne("Micon.CMS.Models.Component", "Component")
+                    b.HasOne("Micon.CMS.Models.ComponentRelation", "ComponentRelation")
                         .WithMany("ComponentSettings")
-                        .HasForeignKey("ComponentId")
+                        .HasForeignKey("ComponentRelationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -560,13 +568,21 @@ namespace Micon.CMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Micon.CMS.Models.PageTemplate", "PageTemplate")
+                        .WithMany()
+                        .HasForeignKey("PageTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.Navigation("Component");
+                    b.Navigation("ComponentRelation");
 
                     b.Navigation("Page");
+
+                    b.Navigation("PageTemplate");
 
                     b.Navigation("Tenant");
                 });
@@ -674,13 +690,13 @@ namespace Micon.CMS.Migrations
                 {
                     b.Navigation("Children");
 
-                    b.Navigation("ComponentSettings");
-
                     b.Navigation("Parents");
                 });
 
             modelBuilder.Entity("Micon.CMS.Models.ComponentRelation", b =>
                 {
+                    b.Navigation("ComponentSettings");
+
                     b.Navigation("PageTemplates");
                 });
 

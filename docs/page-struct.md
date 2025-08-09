@@ -1,0 +1,22 @@
+# ページの構造
+
+- root
+    - Login
+    - UserManagement
+        1. User作成
+        2. User一覧
+        - User管理
+            1. ロール追加・削除
+            2. User名・パスワードの変更
+    - RoleManagement
+        1. Role作成
+        2. Role一覧
+        3. Roleの編集
+    - TemplateManagement
+        1. Template作成
+        2. Template一覧
+        - TemplateEdit
+        - PagesManagement
+            1. Page作成
+            2. Page一覧
+            - PageEdit

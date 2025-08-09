@@ -4,59 +4,53 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Micon.CMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/@@picocss/pico@2.0.6/css/pico.min.css" rel="stylesheet">
+    <!-- Compiled and minified CSS -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Custom styles CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Micon.CMS.styles.css" asp-append-version="true" />
 </head>
 <body x-data="{ menuIsVisible:false }">
-    <header class="container-fluid">
+    <header class="navbar-fixed">
         <nav>
-            
-            <ul>
-                <li>
-                    <a @@click="menuIsVisible = !menuIsVisible" class="menu-toggle" id="menu-toggle" @@click.outside="if(menuIsVisible ){menuIsVisible = false}">
-                        <img src="~/icon/feather/menu.svg">
-                    </a>
-                <li />
-            </ul>
-            <ul>
-                <li><strong><a href="#" class="contrast">Micon.CMS</a></strong></li>
-            </ul>
-            <ul>
-                <li>
-                    <a href="#">アカウント</a>
-                </li>
-            </ul>
-
+            <div class="nav-wrapper teal darken-3">
+                <a href="#" class="brand-logo center">Micon.CMS</a>
+                <ul class="right">
+                    <li>
+                        <a href="#">アカウント</a>
+                    </li>
+                </ul>
+            </div>
         </nav>
     </header>
    
-    
-    <div>
-        <aside class="sidebar" :class="{ 'open':menuIsVisible }" @@click="menuIsVisible = true">
-            <nav>
-                <ul>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a></li>
+    <main class="row">
+        <aside class="col s2 collection">
+                <ul class="aside-menu">
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="UserManagement" asp-action="Index" class="teal-text">ユーザー管理</a></li>
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="RoleManagement" asp-action="Index" class="teal-text">ロール管理</a></li>
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="UserManagement" asp-action="Index" class="teal-text">テンプレート管理</a></li>
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="UserManagement" asp-action="Index" class="teal-text">ページ管理</a></li>
+                    <li class="collection-item teal-text text-lighten-4"><a asp-area="" asp-controller="UserManagement" asp-action="Index" class="teal-text">ログアウト</a></li>
                 </ul>
-            </nav>
         </aside>
-        <div class="space-left">
-            <main role="main" class="container-fluid">
+        <div role="main" class="col s10">
                 @RenderBody()
-            </main>
         </div>
 
-    </div>
+        <footer class="container" style="text-align:center">
+                &copy; 2025 - Micon.CMS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </footer>
+    </main>
 
-    <footer class="container" style="text-align:center">
-            &copy; 2025 - Micon.CMS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-    </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
 using System.Runtime.Loader;
 namespace Micon.CMS
 {
@@ -67,6 +68,7 @@ namespace Micon.CMS
                 .AddRoles<ApplicationRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddScoped<IPageTemplateRepository,PageTemplateRepository>();
+            //builder.Services.AddScoped<IPageTemplateRepository, PageTemplateRepository>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -102,7 +104,10 @@ namespace Micon.CMS
             {
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 context.Database.Migrate();
+
             }
+
+            
             app.Run();
         }
     }

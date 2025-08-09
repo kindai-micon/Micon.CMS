@@ -15,7 +15,7 @@ namespace Micon.CMS.Models
         }
 
         [ForeignKey(nameof(Tenant))]
-        public Guid TenantId { get; set; } 
-        public Tenant Tenant { get; init; }
+        public Guid? TenantId { get; set; } 
+        public Tenant? Tenant { get; init; }
     }
 }
