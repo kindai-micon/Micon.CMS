@@ -14,6 +14,7 @@ namespace Micon.CMS.Models
         public Component? Child { get; set; }
         [Required]
         public int Order { get; set; }
+        public List<ComponentSetting> ComponentSettings { get; set; }
         public List<PageTemplate> PageTemplates { get; set; }
         public bool IsPriority { get; set; }
 
