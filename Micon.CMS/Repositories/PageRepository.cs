@@ -55,33 +55,33 @@ namespace Micon.CMS.Repositories
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public Task<List<PageHistory>> GetPageHistoriesAsync(Page page,ApplicationUser user)
+        public Task<List<PageHistory>> GetPageHistoriesAsync(Page page,ApplicationUser user, CancellationToken cancellationToken)
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id && x.ApplicationUserId == user.Id)
                 .OrderByDescending(x => x.Modified)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
-        public Task<List<PageHistory>> GetPageHistoriesBetweenAsync(Page page,ApplicationUser user,DateTimeOffset StartTime,DateTimeOffset EndTime)
+        public Task<List<PageHistory>> GetPageHistoriesBetweenAsync(Page page,ApplicationUser user,DateTimeOffset StartTime,DateTimeOffset EndTime, CancellationToken cancellationToken)
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id && x.ApplicationUserId == user.Id &&x.Modified > StartTime.UtcDateTime && x.Modified < EndTime.UtcDateTime)
                 .OrderByDescending(x => x.Modified)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
-        public Task<List<PageHistory>> GetPageHistoriesBeforeAsync(Page page,ApplicationUser user,DateTimeOffset dateTime)
+        public Task<List<PageHistory>> GetPageHistoriesBeforeAsync(Page page,ApplicationUser user,DateTimeOffset dateTime, CancellationToken cancellationToken)
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id && x.ApplicationUserId == user.Id && x.Modified < dateTime.UtcDateTime)
                 .OrderByDescending(x => x.Modified)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
-        public Task<List<PageHistory>> GetPageHistoriesAfterAsync(Page page,ApplicationUser user,DateTimeOffset dateTime)
+        public Task<List<PageHistory>> GetPageHistoriesAfterAsync(Page page,ApplicationUser user,DateTimeOffset dateTime, CancellationToken cancellationToken)
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id && x.ApplicationUserId == user.Id && x.Modified > dateTime.UtcDateTime)
                 .OrderByDescending(x => x.Modified)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
         public async Task AddPageHistoryAsync(Page page, ApplicationUser user, string comment, CancellationToken cancellationToken)
         {
