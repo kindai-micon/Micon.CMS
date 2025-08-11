@@ -54,8 +54,14 @@ namespace Micon.CMS.Repositories
                 .Where(x => x.Id == page.PageTemplateId)
                 .FirstOrDefaultAsync(cancellationToken);
         }
-
-        public Task<List<PageHistory>> GetPageHistoriesAsync(Page page,ApplicationUser user, CancellationToken cancellationToken)
+        public Task<List<PageHistory>> GetPageHistoriesAsync(Page page, CancellationToken cancellationToken)
+        {
+            return dbContext.PageHistories
+                .Where(x => x.PageId == page.Id)
+                .OrderByDescending(x => x.Modified)
+                .ToListAsync(cancellationToken);
+        }
+        public Task<List<PageHistory>> GetPageHistoriesAtUserAsync(Page page,ApplicationUser user, CancellationToken cancellationToken)
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id && x.ApplicationUserId == user.Id)
