@@ -1,12 +1,31 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model Micon.CMS.Models.ApplicationUser
 
-<ul>
-    <li>
-        User1
-    </li>
-</ul>
+<div class="container">
+    <h3>ユーザー設定: @Model.UserName</h3>
 
-@{
-}
+    <div class="card">
+        <div class="card-content">
+            <form>
+                <div class="input-field">
+                    <input id="user_name" type="text" class="validate" value="@Model.UserName">
+                    <label for="user_name">ユーザー名</label>
+                </div>
+                <div class="input-field">
+                    <input id="email" type="email" class="validate" value="@Model.Email">
+                    <label for="email">Email</label>
+                </div>
+                @* ここにロール管理などの他の設定項目を追加できます *@
+            </form>
+        </div>
+        <div class="card-action">
+            <div class="right-align">
+                <a class="waves-effect waves-light btn">
+                    <i class="material-icons left">save</i>保存
+                </a>
+                <a class="waves-effect waves-light btn grey" asp-action="Index">
+                    <i class="material-icons left">cancel</i>キャンセル
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

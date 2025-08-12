@@ -1,18 +1,100 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Micon.CMS.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Micon.CMS.Models.Form;
 
 namespace Micon.CMS.Controllers
 {
     public class UserManagementController : Controller
     {
-        public IActionResult Index()
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;
+
+        public UserManagementController(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
         {
-            return View();
+            _userManager = userManager;
+            _roleManager = roleManager;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            var userViewModels = new List<UserViewModel>();
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                userViewModels.Add(new UserViewModel
+                {
+                    User = user,
+                    Roles = roles
+                });
+            }
+            return View(userViewModels);
+        }
+
+        [HttpGet($"{nameof(User)}/{{id}}")]
+        public async Task<IActionResult> User([FromRoute] string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return View(user);
         }
 
         [HttpGet]
-        public IActionResult User([FromRoute]string id)
+        public IActionResult Create()
         {
-            return View();
+            var model = new CreateUserViewModel
+            {
+                AllRoles = _roleManager.Roles.ToList()
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateUserViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser { UserName = model.UserName, Email = model.Email };
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (result.Succeeded)
+                {
+                    if (model.SelectedRoles != null)
+                    {
+                        await _userManager.AddToRolesAsync(user, model.SelectedRoles);
+                    }
+                    return RedirectToAction(nameof(Index));
+                }
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+            model.AllRoles = _roleManager.Roles.ToList();
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user != null)
+            {
+                var result = await _userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                // Handle errors
+            }
+            return RedirectToAction(nameof(Index)); // Or show an error
         }
     }
+
 }

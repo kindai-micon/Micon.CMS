@@ -1,0 +1,63 @@
+@model Micon.CMS.Models.Form.CreateUserViewModel
+
+<div class="container">
+    <h3>新規ユーザー作成</h3>
+
+    <div class="card">
+        <div class="card-content">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="input-field">
+                    <input asp-for="UserName" class="validate" />
+                    <label asp-for="UserName"></label>
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+
+                <div class="input-field">
+                    <input asp-for="Email" class="validate" />
+                    <label asp-for="Email"></label>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="input-field">
+                    <input asp-for="Password" class="validate" />
+                    <label asp-for="Password"></label>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="input-field">
+                    <input asp-for="ConfirmPassword" class="validate" />
+                    <label asp-for="ConfirmPassword"></label>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <h5>ロール</h5>
+                    @for (var i = 0; i < Model.AllRoles.Count; i++)
+                    {
+                        <p>
+                            <label>
+                                <input type="checkbox" name="SelectedRoles" value="@Model.AllRoles[i].Name" />
+                                <span>@Model.AllRoles[i].Name</span>
+                            </label>
+                        </p>
+                    }
+                </div>
+
+                <div class="card-action right-align">
+                    <button type="submit" class="waves-effect waves-light btn">
+                        <i class="material-icons left">add</i>作成
+                    </button>
+                    <a class="waves-effect waves-light btn grey" asp-action="Index">
+                        <i class="material-icons left">cancel</i>キャンセル
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,27 +1,37 @@
-﻿@page
-@model Micon.CMS.Views.UserManagement.IndexModel
+﻿@model IEnumerable<Micon.CMS.Models.Form.UserViewModel>
 
 <div class="container">
-    <h3>ユーザー管理</h3>
-    @* Card Component Start *@
-    <div class="card">
-        <div class="card-content">
-            @* FIX: UserName *@
-            <span class="card-title activator grey-text text-darken-4">UserName</span>
-            @* FIX: Role *@
-            <p>ロール：DUMMY, DUMMY</p>
+    <div class="row">
+        <div class="col s6">
+            <h3>ユーザー管理</h3>
         </div>
-        <div class="card-action">
-            <div class="right-align">
-                <a class="waves-effect waves-light btn grey darken-1" asp-area="" asp-controller="UserManagement" asp-action="User" asp-route-id="123">
-                    <i class="material-icons left">settings</i>設定
-                </a>
-                <a class="waves-effect waves-light btn red darken-2"><i class="material-icons left">clear</i>削除</a>
-            </div>
+        <div class="col s6 right-align" style="padding-top: 2rem;">
+            <a class="waves-effect waves-light btn" asp-action="Create">
+                <i class="material-icons left">add</i>新規ユーザー作成
+            </a>
         </div>
     </div>
-    @* Card Component End *@
-</div>
 
-@{
-}
+    @foreach (var userViewModel in Model)
+    {
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title activator grey-text text-darken-4">@userViewModel.User.UserName</span>
+                <p>ロール：@string.Join(", ", userViewModel.Roles)</p>
+            </div>
+            <div class="card-action">
+                <div class="right-align">
+                    <a class="waves-effect waves-light btn grey darken-1" asp-area="" asp-controller="UserManagement" asp-action="User" asp-route-id="@userViewModel.User.Id">
+                        <i class="material-icons left">settings</i>設定
+                    </a>
+                    <form asp-action="DeleteUser" asp-route-id="@userViewModel.User.Id" method="post" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="waves-effect waves-light btn red darken-2" onclick="return confirm('本当にこのユーザーを削除しますか？');">
+                            <i class="material-icons left">clear</i>削除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
