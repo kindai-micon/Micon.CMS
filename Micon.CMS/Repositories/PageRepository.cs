@@ -58,6 +58,7 @@ namespace Micon.CMS.Repositories
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id)
+                .Include(x => x.ApplicationUser)
                 .OrderByDescending(x => x.Modified)
                 .ToListAsync(cancellationToken);
         }
@@ -65,6 +66,7 @@ namespace Micon.CMS.Repositories
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id && x.ApplicationUserId == user.Id)
+                .Include(x => x.ApplicationUser)
                 .OrderByDescending(x => x.Modified)
                 .ToListAsync(cancellationToken);
         }
@@ -72,6 +74,7 @@ namespace Micon.CMS.Repositories
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id && x.ApplicationUserId == user.Id &&x.Modified > StartTime.UtcDateTime && x.Modified < EndTime.UtcDateTime)
+                .Include(x => x.ApplicationUser)
                 .OrderByDescending(x => x.Modified)
                 .ToListAsync(cancellationToken);
         }
@@ -79,6 +82,7 @@ namespace Micon.CMS.Repositories
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id && x.ApplicationUserId == user.Id && x.Modified < dateTime.UtcDateTime)
+                .Include(x => x.ApplicationUser)
                 .OrderByDescending(x => x.Modified)
                 .ToListAsync(cancellationToken);
         }
@@ -86,6 +90,7 @@ namespace Micon.CMS.Repositories
         {
             return dbContext.PageHistories
                 .Where(x => x.PageId == page.Id && x.ApplicationUserId == user.Id && x.Modified > dateTime.UtcDateTime)
+                .Include(x => x.ApplicationUser)
                 .OrderByDescending(x => x.Modified)
                 .ToListAsync(cancellationToken);
         }
