@@ -2,6 +2,7 @@
 using Micon.CMS.Models.Form;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Micon.CMS.Controllers
 {
@@ -15,15 +16,40 @@ namespace Micon.CMS.Controllers
         [HttpPost]
         public async Task<IActionResult> Login([Bind("Organization, UserName, Password")] LoginModel model)
         {
-           var SignInResult = await signInManager.PasswordSignInAsync(model.UserName, model.Password, true, false);
-            if(SignInResult.Succeeded)
+            var user = await userManager.FindByNameAsync(model.UserName);
+            if (user != null)
             {
-                return RedirectToAction("Index", "Home");
+                var result = await signInManager.PasswordSignInAsync(user, model.Password, true, lockoutOnFailure: false);
+                if (result.Succeeded)
+                {
+                    // Add TenantId to claims
+                    var claims = new List<Claim>
+                    {
+                        new Claim("TenantId", user.TenantId.ToString())
+                    };
+                    // Remove old claim if exists and add new one
+                    var oldClaim = (await userManager.GetClaimsAsync(user)).FirstOrDefault(c => c.Type == "TenantId");
+                    if(oldClaim != null)
+                    {
+                        await userManager.RemoveClaimAsync(user, oldClaim);
+                    }
+                    await userManager.AddClaimAsync(user, new Claim("TenantId", user.TenantId.ToString()));
+
+
+                    return RedirectToAction("Index", "Home");
+                }
             }
-            else
-            {
-                return View("Index");
-            }
+
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            return View("Index", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            await signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Home");
         }
     }
 }

@@ -68,6 +68,8 @@ namespace Micon.CMS
                 .AddRoles<ApplicationRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddScoped<IPageTemplateRepository,PageTemplateRepository>();
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<TestDataSeeder>(); // Add this line
             //builder.Services.AddScoped<IPageTemplateRepository, PageTemplateRepository>();
             var app = builder.Build();
 
@@ -77,6 +79,14 @@ namespace Micon.CMS
                 app.UseExceptionHandler("/Home/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
+            }
+            else
+            {
+                // Add this block for the test data seeder endpoint
+                app.MapGet("/seed-test-data", async (TestDataSeeder seeder) => {
+                    await seeder.SeedAsync();
+                    return Results.Ok("Test data seeded successfully for Tenant 'TestCorp' and user 'testuser'.");
+                });
             }
 
             app.UseHttpsRedirection();

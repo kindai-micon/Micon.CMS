@@ -1,22 +1,53 @@
 ﻿using Micon.CMS.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.Extensions.Logging.Abstractions;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
-using System.Linq;
-using System.Security.Cryptography.Pkcs;
+using System.Security.Claims;
 
 namespace Micon.CMS
 {
-    public class ApplicationDbContext:DbContext
+    public class ApplicationDbContext : DbContext
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly Guid? _tenantId;
+
+        // Constructor for design-time
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
+            // Design-time context doesn't have HttpContext, so RLS logic is skipped.
+        }
+        public ApplicationDbContext() { }
+
+        private Guid? GetTenantId()
+        {
+            var tenantIdClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue("TenantId");
+            if (Guid.TryParse(tenantIdClaim, out var tenantId))
+            {
+                return tenantId;
+            }
+            return null;
         }
 
-        public ApplicationDbContext():base()
+        public override int SaveChanges()
         {
+            SetTenantId();
+            return base.SaveChanges();
         }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            SetTenantId();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void SetTenantId()
+        {
+            if (_tenantId.HasValue)
+            {
+                this.Database.ExecuteSqlRaw("SELECT set_config('app.current_tenant', {0}, false)", _tenantId.Value.ToString());
+            }
+        }
+
         public DbSet<Tenant> Tenants { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<ApplicationRole> ApplicationRoles { get; set; }
@@ -63,7 +94,7 @@ namespace Micon.CMS
                     .WithOne(t => t.PageTemplate);
                 builder.HasOne(t => t.ComponentRelation)
                     .WithMany(t => t.PageTemplates)
-                    .HasForeignKey(x=>x.ComponentRelationId);
+                    .HasForeignKey(x => x.ComponentRelationId);
 
             });
 
@@ -92,8 +123,8 @@ namespace Micon.CMS
 
             modelBuilder.Entity<ComponentRelation>(builder =>
             {
-                builder.HasIndex(t=>t.TenantId);
-                builder.HasIndex(t =>t.ChildId);
+                builder.HasIndex(t => t.TenantId);
+                builder.HasIndex(t => t.ChildId);
                 builder.HasIndex(t => t.ParentId);
 
                 builder.HasOne(t => t.Parent)
@@ -115,7 +146,7 @@ namespace Micon.CMS
                 builder.HasIndex(t => t.TenantId);
                 builder.HasIndex(t => t.Id);
             });
-             
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
