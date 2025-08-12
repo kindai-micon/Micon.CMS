@@ -105,6 +105,16 @@ namespace Micon.CMS
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 context.Database.Migrate();
 
+                // Seed the database with the initial user
+                try
+                {
+                    IdentityDataInitializer.SeedData(scope.ServiceProvider).Wait();
+                }
+                catch (Exception ex)
+                {
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while seeding the database.");
+                }
             }
 
             

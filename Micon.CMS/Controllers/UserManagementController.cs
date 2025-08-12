@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Micon.CMS.Models.Form;
+using System.ComponentModel.DataAnnotations;
 
 namespace Micon.CMS.Controllers
 {
@@ -60,7 +60,7 @@ namespace Micon.CMS.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.UserName, Email = model.Email };
+                var user = new ApplicationUser { UserName = model.UserName };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -97,4 +97,30 @@ namespace Micon.CMS.Controllers
         }
     }
 
+    public class UserViewModel
+    {
+        public ApplicationUser User { get; set; }
+        public IEnumerable<string> Roles { get; set; }
+    }
+
+    public class CreateUserViewModel
+    {
+        [Required]
+        [Display(Name = "ユーザー名")]
+        public string UserName { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "{0} は {2} 文字以上、{1} 文字以下である必要があります。", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "パスワード")]
+        public string Password { get; set; }
+
+        [DataType(DataType.Password)]
+        [Display(Name = "パスワードの確認")]
+        [Compare("Password", ErrorMessage = "パスワードと確認用パスワードが一致しません。")]
+        public string ConfirmPassword { get; set; }
+
+        public List<string> SelectedRoles { get; set; }
+        public List<ApplicationRole> AllRoles { get; set; } = new List<ApplicationRole>();
+    }
 }
