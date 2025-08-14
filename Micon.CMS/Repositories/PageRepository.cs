@@ -6,7 +6,6 @@ namespace Micon.CMS.Repositories
 {
     public class PageRepository(ApplicationDbContext dbContext) : BaseRepository<Page>(dbContext), IPageRepository
     {
-
         public override Page Create(Page page)
         {
             return base.Create(page);
@@ -99,5 +98,9 @@ namespace Micon.CMS.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public Task<Page?> GetPageByNameAsync(string pageName, CancellationToken cancellationToken = default)
+        {
+            return dbContext.Pages.FirstOrDefaultAsync(p => p.Title == pageName, cancellationToken);
+        }
     }
 }

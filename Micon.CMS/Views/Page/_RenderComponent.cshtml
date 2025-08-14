@@ -1,0 +1,14 @@
+@model Micon.CMS.Models.Form.PageComponentViewModel
+
+@if (Model != null)
+{
+    @await Component.InvokeAsync(Model.ComponentName, new { settings = Model.Settings })
+
+    if (Model.Children != null && Model.Children.Any())
+    {
+        foreach (var child in Model.Children)
+        {
+            @await Html.PartialAsync("_RenderComponent", child)
+        }
+    }
+}

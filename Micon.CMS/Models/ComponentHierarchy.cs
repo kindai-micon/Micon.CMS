@@ -1,4 +1,6 @@
-﻿namespace Micon.CMS.Models
+﻿using System.Collections.Generic;
+
+namespace Micon.CMS.Models
 {
     public class ComponentHierarchy
     {

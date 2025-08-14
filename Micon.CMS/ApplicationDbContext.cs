@@ -28,6 +28,8 @@ namespace Micon.CMS
         public DbSet<Component> Components { get; set; }
         public DbSet<ComponentRelation> ComponentRelations { get; set; }
         public DbSet<ComponentSetting> ComponentSettings { get; set; }
+        public DbSet<ComponentHierarchy> ComponentHierarchies { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

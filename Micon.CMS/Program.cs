@@ -1,16 +1,13 @@
-using ClassLibrary1.Components.Test;
 using Micon.CMS.Models;
 using Micon.CMS.Repositories;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
-using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.Loader;
+
 namespace Micon.CMS
 {
     public class Program
@@ -19,23 +16,42 @@ namespace Micon.CMS
         {
             var builder = WebApplication.CreateBuilder(args);
             var current = Directory.GetCurrentDirectory();
-            var cshtmlDir = Path.Combine(current, "Plugins", "Pages");
-            PhysicalFileProvider physicalFileProvider = new PhysicalFileProvider(cshtmlDir);
-            //var assembly = AssemblyLoadContext.GetAssemblyName()
-            //EmbeddedFileProvider embeddedFileProvider = new EmbeddedFileProvider(,)
-            // Add services to the container.
-            var currentdir=Directory.GetCurrentDirectory();
-            var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(currentdir,"bin","Debug","net9.0","ClassLibrary1.dll"));
-            
-            builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation(options =>
-            {
-                options.FileProviders.Add(new EmbeddedFileProvider(typeof(TestViewComponent).Assembly));
 
+            // プラグインディレクトリの設定
+            var pluginsDir = Path.Combine(current, "Plugins");
+            if (!Directory.Exists(pluginsDir))
+            {
+                Directory.CreateDirectory(pluginsDir);
+            }
+
+            var mvcBuilder = builder.Services.AddControllersWithViews();
+            
+            // プラグインDLLの読み込みと登録
+            var pluginAssemblies = new List<Assembly>();
+            foreach (var dllFile in Directory.GetFiles(pluginsDir, "*.dll", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(dllFile);
+                    pluginAssemblies.Add(assembly);
+                    mvcBuilder.AddApplicationPart(assembly);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading plugin assembly: {dllFile}");
+                    Console.WriteLine(ex.Message);
+                }
+            }
+
+            mvcBuilder.AddRazorRuntimeCompilation(options =>
+            {
+                foreach (var assembly in pluginAssemblies)
+                {
+                    options.FileProviders.Add(new EmbeddedFileProvider(assembly));
+                }
             });
-            //builder.Services.Configure<RazorViewEngineOptions>(options =>
-            //{
-            //    //options.ViewLocationExpanders.Add(new CustomViewLocationExpander());
-            //});
+
+
             if (builder.Environment.IsDevelopment())
             {
                 builder.Services.AddCors(options =>
@@ -68,7 +84,9 @@ namespace Micon.CMS
                 .AddRoles<ApplicationRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddScoped<IPageTemplateRepository,PageTemplateRepository>();
-            //builder.Services.AddScoped<IPageTemplateRepository, PageTemplateRepository>();
+            builder.Services.AddScoped<IPageRepository, PageRepository>();
+            builder.Services.AddScoped<IComponentRelationRepository, ComponentRelationRepository>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -96,10 +114,22 @@ namespace Micon.CMS
                 app.UseCors();
             }
             app.UseAuthorization();
-            
+
+            app.MapControllerRoute(
+                name: "page",
+                pattern: "{categoryId}/{pageId:guid}",
+                defaults: new { controller = "Page", action = "Index" });
+
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "Setting/{controller=Home}/{action=Index}/{id?}");
+            
+            app.MapGet("/", context =>
+            {
+                context.Response.Redirect("/Home/Index");
+                return Task.CompletedTask;
+            });
+
             using(var scope = app.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

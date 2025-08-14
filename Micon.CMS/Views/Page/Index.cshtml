@@ -1,0 +1,9 @@
+@model Micon.CMS.Models.Form.PageComponentViewModel
+
+@{
+    ViewData["Title"] = "Page";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@await Html.PartialAsync("_RenderComponent", Model)
