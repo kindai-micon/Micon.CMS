@@ -21,7 +21,7 @@ namespace Micon.CMS.Controllers
             _pageTemplateRepository = pageTemplateRepository;
         }
 
-        [HttpGet("/{categoryId}/{pageId:guid}")]
+        [HttpGet("/{categoryId}/{pageId}")]
         public async Task<IActionResult> Index(Guid categoryId, Guid pageId)
         {
             var page = await _context.Pages

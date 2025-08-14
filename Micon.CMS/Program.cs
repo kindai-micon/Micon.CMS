@@ -117,16 +117,25 @@ namespace Micon.CMS
 
             app.MapControllerRoute(
                 name: "page",
-                pattern: "{categoryId}/{pageId:guid}",
+                pattern: "{tenant}/{categoryId}/{pageId:guid}",
                 defaults: new { controller = "Page", action = "Index" });
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "Setting/{controller=Home}/{action=Index}/{id?}");
-            
+                pattern: "{tenant}/Setting/{controller=Home}/{action=Index}/{id?}");
+
+            app.MapGet("/{tenant}", context =>
+            {
+                var tenant = context.Request.RouteValues["tenant"];
+                context.Response.Redirect($"/{tenant}/Setting/Home/Index");
+                return Task.CompletedTask;
+            });
+
             app.MapGet("/", context =>
             {
-                context.Response.Redirect("/Home/Index");
+                // Redirect to a default tenant or a tenant selection page.
+                // For now, let's assume a default tenant "default"
+                context.Response.Redirect("/default");
                 return Task.CompletedTask;
             });
 

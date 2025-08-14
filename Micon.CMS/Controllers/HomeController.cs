@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Micon.CMS.Controllers
 {
-    [Route("Setting")]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -19,8 +18,6 @@ namespace Micon.CMS.Controllers
             _logger = logger;
         }
 
-        [Route("")]
-        [Route("Index")]
         public async Task<IActionResult> Index()
         {
             return View();
