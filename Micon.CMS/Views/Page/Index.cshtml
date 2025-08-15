@@ -6,4 +6,4 @@
 
 <h1>@ViewData["Title"]</h1>
 
-@await Html.PartialAsync("_RenderComponent", Model)
+@await Html.LoadChildComponent(Component,"Main")

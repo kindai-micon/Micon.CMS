@@ -1,3 +1,4 @@
+using Micon.CMS.Library.Services;
 using Micon.CMS.Models;
 using Micon.CMS.Repositories;
 using Microsoft.AspNetCore.Identity;
@@ -31,16 +32,16 @@ namespace Micon.CMS
             }
 
             var mvcBuilder = builder.Services.AddControllersWithViews();
-            
             // プラグインDLLの読み込みと登録
             var pluginAssemblies = new List<Assembly>();
+            
             foreach (var dllFile in Directory.GetFiles(pluginsDir, "*.dll", SearchOption.AllDirectories))
             {
                 try
                 {
                     var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(dllFile);
                     pluginAssemblies.Add(assembly);
-                    mvcBuilder.AddApplicationPart(assembly);
+
                 }
                 catch (Exception ex)
                 {
@@ -48,6 +49,7 @@ namespace Micon.CMS
                     Console.WriteLine(ex.Message);
                 }
             }
+            
 
             mvcBuilder.AddRazorRuntimeCompilation(options =>
             {
@@ -149,6 +151,7 @@ namespace Micon.CMS
             {
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 context.Database.Migrate();
+                AssemblyService.AddAssemblies(pluginAssemblies);
 
             }
 

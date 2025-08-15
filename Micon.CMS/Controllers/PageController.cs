@@ -65,7 +65,7 @@ namespace Micon.CMS.Controllers
                     Settings = settingsLookup[h.ChildComponentId].ToDictionary(s => s.Key, s => s.Value)
                 });
 
-            var rootNode = new PageComponentViewModel { ComponentName = "Root" };
+            var rootNode = new PageComponentViewModel { ComponentName = "Root" ,SlotName = "Main" };
 
             foreach (var item in hierarchy)
             {
