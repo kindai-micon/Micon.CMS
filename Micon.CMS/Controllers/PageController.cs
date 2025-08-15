@@ -1,5 +1,5 @@
 using Micon.CMS.Models;
-using Micon.CMS.Models.Form;
+using Micon.CMS.Library.Models.Form;
 using Micon.CMS.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -59,7 +59,9 @@ namespace Micon.CMS.Controllers
                 h => h.ChildId,
                 h => new PageComponentViewModel
                 {
+                    ComponentId = h.ChildComponentId,
                     ComponentName = h.ChildComponentName,
+                    SlotName = h.SlotName,
                     Settings = settingsLookup[h.ChildComponentId].ToDictionary(s => s.Key, s => s.Value)
                 });
 

@@ -8,6 +8,7 @@ namespace Micon.CMS.Repositories
     {
         public override Page Create(Page page)
         {
+            
             return base.Create(page);
         }
 

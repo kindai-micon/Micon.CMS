@@ -14,7 +14,13 @@ namespace Micon.CMS
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            var options = new WebApplicationOptions
+            {
+                Args = args,
+                ContentRootPath = AppContext.GetData("WEB_CONTENT_ROOT") as string
+            };
+
+            var builder = WebApplication.CreateBuilder(options);
             var current = Directory.GetCurrentDirectory();
 
             // プラグインディレクトリの設定
@@ -98,7 +104,7 @@ namespace Micon.CMS
             }
 
             app.UseHttpsRedirection();
-            var cssDir = Path.Combine(current, "Plugins", "Pages", "Themes");
+            var cssDir = Path.Combine(builder.Environment.ContentRootPath, "Plugins", "Pages", "Themes");
             app.UseStaticFiles();
             app.UseStaticFiles(new StaticFileOptions()
             {
