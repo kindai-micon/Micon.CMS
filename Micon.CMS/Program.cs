@@ -1,12 +1,15 @@
 using ClassLibrary1.Components.Test;
 using Micon.CMS.Models;
 using Micon.CMS.Repositories;
+using Micon.CMS.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Micon.CMS.Handler;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
@@ -26,7 +29,10 @@ namespace Micon.CMS
             // Add services to the container.
             var currentdir=Directory.GetCurrentDirectory();
             var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(currentdir,"bin","Debug","net9.0","ClassLibrary1.dll"));
-            
+
+            builder.Services.AddSingleton<IAuthorityScanService, AuthorityScanService>();
+            builder.Services.AddScoped<IAuthorizationHandler, DynamicRoleHandler>();
+
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation(options =>
             {
                 options.FileProviders.Add(new EmbeddedFileProvider(typeof(TestViewComponent).Assembly));
@@ -66,6 +72,8 @@ namespace Micon.CMS
             })
                 .AddDefaultTokenProviders()
                 .AddRoles<ApplicationRole>()
+                .AddUserManager<UserManager<ApplicationUser>>()
+                .AddSignInManager<SignInManager<ApplicationUser>>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddScoped<IPageTemplateRepository,PageTemplateRepository>();
             //builder.Services.AddScoped<IPageTemplateRepository, PageTemplateRepository>();
@@ -105,6 +113,7 @@ namespace Micon.CMS
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 context.Database.Migrate();
 
+                var authorityScanService = scope.ServiceProvider.GetRequiredService<IAuthorityScanService>();
             }
 
             

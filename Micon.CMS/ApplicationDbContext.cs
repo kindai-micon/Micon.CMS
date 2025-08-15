@@ -20,6 +20,7 @@ namespace Micon.CMS
         public DbSet<Tenant> Tenants { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<ApplicationRole> ApplicationRoles { get; set; }
+        public DbSet<Authority> Authorities { get; set; }
         public DbSet<Page> Pages { get; set; }
         public DbSet<PageCategory> PageCategories { get; set; }
         public DbSet<PageHistory> PageHistories { get; set; }
