@@ -8,13 +8,8 @@ namespace Micon.CMS.Library.Models.Form
         public Guid ComponentId { get; set; }
         public string ComponentName { get; set; }
         public string SlotName { get; set; }
+        public Guid? PackageId { get; set; }
         public Dictionary<string, string> Settings { get; set; } = new Dictionary<string, string>();
         public List<PageComponentViewModel> Children { get; set; } = new List<PageComponentViewModel>();
-
-        public PageComponentViewModel()
-        {
-            Children = new List<PageComponentViewModel>();
-            Settings = new Dictionary<string, string>();
-        }
     }
 }
