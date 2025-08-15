@@ -7,8 +7,8 @@ namespace Micon.CMS.Repositories
     {
         public Task<ComponentSetting?> GetSettingAsync(Page page, Component component, string key, CancellationToken cancellationToken);
         public Task<List<ComponentSetting>> GetSettingsAsync(Page page, Component component, CancellationToken cancellationToken);
-        public Task UpdateSettingAsync(ComponentSetting componentSetting, CancellationToken cancellationToken);
-        public Task<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<Micon.CMS.Models.ComponentSetting>> CreateSetting(Page page, Component component, string key, CancellationToken cancellationToken);
+        public Task UpdateSetting(ComponentSetting componentSetting, CancellationToken cancellationToken);
+        public Task CreateSetting(Page page, Component component, string key, CancellationToken cancellationToken);
 
     }
 }

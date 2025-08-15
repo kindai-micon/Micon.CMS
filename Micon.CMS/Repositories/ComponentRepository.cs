@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Micon.CMS.Repositories
 {
-    public class ComponentRepository(ApplicationDbContext dbContext) : BaseRepository<Component>(dbContext)
+    public class ComponentRepository(ApplicationDbContext dbContext) : BaseRepository<Component>(dbContext), IComponentRepository
     {
         public async Task<ComponentSetting?> GetSettingAsync(Page page, Component component, string key, CancellationToken cancellationToken)
         {
@@ -18,12 +18,12 @@ namespace Micon.CMS.Repositories
                 .ToListAsync(cancellationToken);
 
         }
-        public void UpdateSetting(ComponentSetting componentSetting)
+        public async Task UpdateSetting(ComponentSetting componentSetting, CancellationToken cancellationToken)
         {
             dbContext.Update(componentSetting);
-            dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
         }
-        public async Task<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<Micon.CMS.Models.ComponentSetting>> CreateSetting(Page page, Component component, string key, CancellationToken cancellationToken)
+        public async Task CreateSetting(Page page, Component component, string key, CancellationToken cancellationToken)
         {
             ComponentSetting componentSetting = new ComponentSetting();
             componentSetting.Key = key;
@@ -31,7 +31,7 @@ namespace Micon.CMS.Repositories
             componentSetting.PageId = page.Id;
             componentSetting.Component = component;
             componentSetting.ComponentId = component.Id;
-            return await dbContext.AddAsync(componentSetting, cancellationToken);
+
         }
     }
 }
