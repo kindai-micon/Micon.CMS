@@ -31,7 +31,7 @@ namespace Micon.CMS.Repositories
             componentSetting.PageId = page.Id;
             componentSetting.Component = component;
             componentSetting.ComponentId = component.Id;
-
+            dbContext.ComponentSettings.Add(componentSetting);
         }
     }
 }
