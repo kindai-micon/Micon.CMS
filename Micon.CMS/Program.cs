@@ -1,3 +1,4 @@
+using Micon.CMS.Services;
 using Micon.CMS.Library.Services;
 using Micon.CMS.Models;
 using Micon.CMS.Repositories;
@@ -50,6 +51,10 @@ namespace Micon.CMS
                 }
             }
             
+            foreach (var assembly in pluginAssemblies)
+            {
+                mvcBuilder.AddApplicationPart(assembly);
+            }
 
             mvcBuilder.AddRazorRuntimeCompilation(options =>
             {
@@ -73,7 +78,7 @@ namespace Micon.CMS
                 });
             }
             Console.WriteLine(builder.Configuration.GetConnectionString("micon-cms-db"));
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
             {
                 options.UseNpgsql(builder.Configuration.GetConnectionString("micon-cms-db"));
             });
@@ -91,6 +96,9 @@ namespace Micon.CMS
                 .AddDefaultTokenProviders()
                 .AddRoles<ApplicationRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            builder.Services.AddHttpContextAccessor();
+
             builder.Services.AddScoped<IPageTemplateRepository,PageTemplateRepository>();
             builder.Services.AddScoped<IPageRepository, PageRepository>();
             builder.Services.AddScoped<IComponentRelationRepository, ComponentRelationRepository>();
@@ -108,12 +116,12 @@ namespace Micon.CMS
             app.UseHttpsRedirection();
             var cssDir = Path.Combine(builder.Environment.ContentRootPath, "Plugins", "Pages", "Themes");
             app.UseStaticFiles();
-            app.UseStaticFiles(new StaticFileOptions()
-            {
-                FileProvider = new PhysicalFileProvider(cssDir),
-                RequestPath = "/Themes"
-            }
-            );
+            //app.UseStaticFiles(new StaticFileOptions()
+            //{
+            //    FileProvider = new PhysicalFileProvider(cssDir),
+            //    RequestPath = "/Themes"
+            //}
+            //);
 
             app.UseRouting();
             if (app.Environment.IsDevelopment())
@@ -125,7 +133,7 @@ namespace Micon.CMS
 
             app.MapControllerRoute(
                 name: "page",
-                pattern: "{tenant}/{categoryId}/{pageId:guid}",
+                pattern: "/{tenant}/{categoryId}/{pageId}",
                 defaults: new { controller = "Page", action = "Index" });
 
             app.MapControllerRoute(
@@ -147,12 +155,13 @@ namespace Micon.CMS
                 return Task.CompletedTask;
             });
 
-            using(var scope = app.Services.CreateScope())
+            using (var scope = app.Services.CreateScope())
             {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var serviceProvider = scope.ServiceProvider;
+                var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
                 context.Database.Migrate();
-                AssemblyService.AddAssemblies(pluginAssemblies);
 
+                AssemblyService.AddAssemblies(pluginAssemblies);
             }
 
             

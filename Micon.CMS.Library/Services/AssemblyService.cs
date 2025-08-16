@@ -12,7 +12,8 @@ namespace Micon.CMS.Library.Services
             var directory =_assemblies.ToDictionary();
             foreach(var assembly in assemblies)
             {
-                var type = assembly.GetTypes().Where(x => x.IsPublic && x.IsClass && x.Name == "MiconCmsSettings").FirstOrDefault();
+                var types = assembly.DefinedTypes;
+                var type = types.Where(x => x.IsPublic && x.IsClass && x.Name == "MiconCmsSettings").FirstOrDefault();
                 if (type != null)
                 {
                     var field = type.GetField("PackageId");

@@ -1,9 +1,9 @@
 @model Micon.CMS.Library.Models.Form.PageComponentViewModel
 
+
 @{
     ViewData["Title"] = "Page";
 }
 
-<h1>@ViewData["Title"]</h1>
 
-@await Html.LoadChildComponent(Component,"Main")
+@await Html.LoadChildComponentAsync(Component,"Main")

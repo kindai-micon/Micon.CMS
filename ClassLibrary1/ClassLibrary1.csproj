@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Views\Shared\Components\Test2\TestAbcView.cshtml" />
-    <EmbeddedResource Include="Views\Shared\Components\Test\TestView.cshtml" />
+    <EmbeddedResource Include="Views\Shared\Components\C1\Default.cshtml" />
+    <EmbeddedResource Include="Views\Shared\Components\C2\Default.cshtml" />
   </ItemGroup>
 
   <ItemGroup>

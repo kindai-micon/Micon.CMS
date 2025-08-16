@@ -21,7 +21,6 @@ namespace Micon.CMS.Controllers
             _pageTemplateRepository = pageTemplateRepository;
         }
 
-        [HttpGet("/{categoryId}/{pageId}")]
         public async Task<IActionResult> Index(Guid categoryId, Guid pageId)
         {
             var page = await _context.Pages
@@ -45,7 +44,17 @@ namespace Micon.CMS.Controllers
 
             return View(viewModel);
         }
-
+        [HttpGet(nameof(Test))]
+        public IActionResult Test()
+        {
+            PageComponentViewModel viewModel = new PageComponentViewModel();
+            
+            var rootNode = new PageComponentViewModel() { ComponentName = "ClassLibrary1.Components.C1ViewComponent", SlotName = "Main" ,PackageId = new Guid("fd90ba15-f824-456a-b451-7b0bd102c273") };
+            var child = new PageComponentViewModel() { ComponentName = "ClassLibrary1.Components.C2ViewComponent", SlotName = "ChildSlot" ,PackageId = new Guid("fd90ba15-f824-456a-b451-7b0bd102c273") };
+            rootNode.Children.Add(child);
+            viewModel.Children.Add(rootNode);
+            return View("index",viewModel);
+        }
         private PageComponentViewModel BuildViewModelTree(List<ComponentHierarchy> hierarchy, List<ComponentSetting> settings)
         {
             if (hierarchy == null || !hierarchy.Any())
