@@ -13,6 +13,8 @@ namespace Micon.CMS.Models
         public Guid ChildId { get; set; }
         public Component? Child { get; set; }
         [Required]
+        public string SlotName { get; set; }
+        [Required]
         public int Order { get; set; }
         public List<PageTemplate> PageTemplates { get; set; }
         public bool IsPriority { get; set; }
