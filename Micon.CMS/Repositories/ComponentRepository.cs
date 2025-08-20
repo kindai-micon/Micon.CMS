@@ -32,6 +32,7 @@ namespace Micon.CMS.Repositories
             componentSetting.Component = component;
             componentSetting.ComponentId = component.Id;
             dbContext.ComponentSettings.Add(componentSetting);
+            await dbContext.SaveChangesAsync();
         }
     }
 }
