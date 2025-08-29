@@ -17,10 +17,7 @@ namespace Micon.CMS.Controllers
         public async Task<IActionResult> Create( CancellationToken cancellationToken)
         {
 
-            var category = new PageCategory();
             var template = new PageTemplate();
-            template.PageCategoryId = category.Id;
-            template.PageCategory = category;
             return View(template);
         }
 

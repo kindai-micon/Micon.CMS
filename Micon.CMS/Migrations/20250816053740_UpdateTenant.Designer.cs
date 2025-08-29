@@ -3,6 +3,7 @@ using System;
 using Micon.CMS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Micon.CMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250816053740_UpdateTenant")]
+    partial class UpdateTenant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -297,9 +300,6 @@ namespace Micon.CMS.Migrations
                     b.Property<DateTimeOffset>("Modified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PageCategoryId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("PageTemplateId")
                         .HasColumnType("uuid");
 
@@ -317,8 +317,6 @@ namespace Micon.CMS.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Id");
-
-                    b.HasIndex("PageCategoryId");
 
                     b.HasIndex("PageTemplateId");
 
@@ -344,17 +342,12 @@ namespace Micon.CMS.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<Guid>("PageTemplateId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Id");
-
-                    b.HasIndex("PageTemplateId");
 
                     b.HasIndex("TenantId");
 
@@ -422,6 +415,9 @@ namespace Micon.CMS.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<Guid>("PageCategoryId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -430,6 +426,9 @@ namespace Micon.CMS.Migrations
                     b.HasIndex("ComponentRelationId");
 
                     b.HasIndex("Id");
+
+                    b.HasIndex("PageCategoryId")
+                        .IsUnique();
 
                     b.HasIndex("TenantId");
 
@@ -597,35 +596,8 @@ namespace Micon.CMS.Migrations
 
             modelBuilder.Entity("Micon.CMS.Models.Page", b =>
                 {
-                    b.HasOne("Micon.CMS.Models.PageCategory", "PageCategory")
-                        .WithMany("Pages")
-                        .HasForeignKey("PageCategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Micon.CMS.Models.PageTemplate", "PageTemplate")
                         .WithMany("Pages")
-                        .HasForeignKey("PageTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PageCategory");
-
-                    b.Navigation("PageTemplate");
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("Micon.CMS.Models.PageCategory", b =>
-                {
-                    b.HasOne("Micon.CMS.Models.PageTemplate", "PageTemplate")
-                        .WithMany("PageCategories")
                         .HasForeignKey("PageTemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -637,6 +609,17 @@ namespace Micon.CMS.Migrations
                         .IsRequired();
 
                     b.Navigation("PageTemplate");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Micon.CMS.Models.PageCategory", b =>
+                {
+                    b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Tenant");
                 });
@@ -674,6 +657,12 @@ namespace Micon.CMS.Migrations
                         .WithMany("PageTemplates")
                         .HasForeignKey("ComponentRelationId");
 
+                    b.HasOne("Micon.CMS.Models.PageCategory", "PageCategory")
+                        .WithOne("PageTemplate")
+                        .HasForeignKey("Micon.CMS.Models.PageTemplate", "PageCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Micon.CMS.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
@@ -681,6 +670,8 @@ namespace Micon.CMS.Migrations
                         .IsRequired();
 
                     b.Navigation("ComponentRelation");
+
+                    b.Navigation("PageCategory");
 
                     b.Navigation("Tenant");
                 });
@@ -733,13 +724,12 @@ namespace Micon.CMS.Migrations
 
             modelBuilder.Entity("Micon.CMS.Models.PageCategory", b =>
                 {
-                    b.Navigation("Pages");
+                    b.Navigation("PageTemplate")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Micon.CMS.Models.PageTemplate", b =>
                 {
-                    b.Navigation("PageCategories");
-
                     b.Navigation("PageTemplateHistories");
 
                     b.Navigation("Pages");

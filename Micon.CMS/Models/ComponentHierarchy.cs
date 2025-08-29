@@ -1,4 +1,6 @@
-﻿namespace Micon.CMS.Models
+﻿using System.Collections.Generic;
+
+namespace Micon.CMS.Models
 {
     public class ComponentHierarchy
     {
@@ -6,6 +8,7 @@
         public Guid? ParentId { get; set; }
         public Guid ChildId { get; set; }
         public int Order { get; set; }
+        public string SlotName { get; set; }
         public int Level { get; set; }
         public Guid? ParentComponentId { get; set; }
         public string? ParentComponentName { get; set; }

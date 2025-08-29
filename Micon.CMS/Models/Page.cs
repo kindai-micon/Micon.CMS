@@ -8,12 +8,16 @@ namespace Micon.CMS.Models
         [Required]
         [StringLength(256)]
         public string Title { get;set; }
+        public string Description { get; set; }
         [Required]
         [ForeignKey(nameof(PageTemplate))]
-        public string Description { get; set; }
         public Guid PageTemplateId { get; set; }
         public PageTemplate PageTemplate { get; set; }
         public List<PageHistory> PageHistories { get; set; }
+        [Required]
+        [ForeignKey(nameof(PageCategory))]
+        public Guid PageCategoryId { get; set; }
+        public PageCategory PageCategory { get; set; }
         public long ViewCount { get; set; }
     }
 }

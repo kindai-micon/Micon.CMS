@@ -4,12 +4,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Micon.CMS.Models
 {
-    public class ApplicationUser:IdentityUser<Guid>
+    public class ApplicationUser : IdentityUser<Guid>, IBaseModel
     {
         public ApplicationUser()
         {
             Id = Guid.CreateVersion7();
             SecurityStamp = Guid.CreateVersion7().ToString();
+            Created = DateTimeOffset.UtcNow;
+            Modified = DateTimeOffset.UtcNow;
         }
 
         public ApplicationUser(string userName) : this()
@@ -21,7 +23,12 @@ namespace Micon.CMS.Models
 
         [Required]
         [ForeignKey(nameof(Tenant))]
-        public Guid? TenantId { get; set; }
+        public Guid TenantId { get; set; }
         public Tenant? Tenant { get; init; }
+        
+        [Required]
+        public DateTimeOffset Modified { get; set; }
+        [Required]
+        public DateTimeOffset Created { get; set; }
     }
 }
