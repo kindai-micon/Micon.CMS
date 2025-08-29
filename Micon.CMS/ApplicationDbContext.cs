@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Micon.CMS
 {
-    public class ApplicationDbContext:DbContext
+    public class ApplicationDbContext : DbContext
     {
         // A fixed TenantId to be used for all data.
         private static readonly Guid DefaultTenantId = Guid.Parse("00000000-0000-0000-0000-000000000001");
@@ -81,17 +81,18 @@ namespace Micon.CMS
                 builder.HasOne(t => t.PageTemplate)
                     .WithMany(t => t.Pages)
                     .HasForeignKey(t => t.PageTemplateId);
+                builder.HasOne(t => t.PageCategory)
+                    .WithMany(t => t.Pages)
+                    .HasForeignKey(t => t.PageCategoryId);
             });
 
             modelBuilder.Entity<PageTemplate>(builder =>
             {
                 builder.HasIndex(PageTemplate => PageTemplate.Id);
                 builder.HasIndex(PageTemplate => PageTemplate.TenantId);
-                builder.HasOne(t => t.PageCategory)
-                    .WithOne(t => t.PageTemplate);
                 builder.HasOne(t => t.ComponentRelation)
                     .WithMany(t => t.PageTemplates)
-                    .HasForeignKey(x=>x.ComponentRelationId);
+                    .HasForeignKey(x => x.ComponentRelationId);
 
             });
 
@@ -104,6 +105,9 @@ namespace Micon.CMS
 
             modelBuilder.Entity<PageCategory>(builder =>
             {
+                builder.HasOne(t => t.PageTemplate)
+                    .WithMany(t => t.PageCategories)
+                    .HasForeignKey(t => t.PageTemplateId);
                 builder.HasIndex(PageCategory => PageCategory.Id);
                 builder.HasIndex(PageCategory => PageCategory.TenantId);
             });
@@ -120,8 +124,8 @@ namespace Micon.CMS
 
             modelBuilder.Entity<ComponentRelation>(builder =>
             {
-                builder.HasIndex(t=>t.TenantId);
-                builder.HasIndex(t =>t.ChildId);
+                builder.HasIndex(t => t.TenantId);
+                builder.HasIndex(t => t.ChildId);
                 builder.HasIndex(t => t.ParentId);
 
                 builder.HasOne(t => t.Parent)
@@ -143,7 +147,7 @@ namespace Micon.CMS
                 builder.HasIndex(t => t.TenantId);
                 builder.HasIndex(t => t.Id);
             });
-             
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 
 namespace Micon.CMS.Controllers
 {
-    public class PageController : Controller
+    public class ExternalController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IPageTemplateRepository _pageTemplateRepository;
 
-        public PageController(ApplicationDbContext context, IPageTemplateRepository pageTemplateRepository)
+        public ExternalController(ApplicationDbContext context, IPageTemplateRepository pageTemplateRepository)
         {
             _context = context;
             _pageTemplateRepository = pageTemplateRepository;
@@ -25,7 +25,10 @@ namespace Micon.CMS.Controllers
         {
             var page = await _context.Pages
                 .Include(p => p.PageTemplate)
-                .FirstOrDefaultAsync(p => p.PageTemplate.PageCategoryId == categoryId && p.Id == pageId);
+                .FirstOrDefaultAsync(p => p.PageTemplate.PageCategories
+                    .Select(x=>x.Id).Contains(categoryId) 
+                    && p.Id == pageId
+                );
 
             if (page == null || page.PageTemplate == null)
             {

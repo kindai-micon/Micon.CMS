@@ -2,16 +2,13 @@
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var path = Context.Request.Path;
 
-    if (path.StartsWithSegments("/Setting"))
-    {
-        Layout = "_SettingLayout";
-    }
-    else if (controller == "Page")
+    if (controller == "External")
     {
         Layout = "_Main_Layout";
     }
     else
     {
-        Layout = "_Layout";
+        Layout = "_SettingLayout";
+
     }
 }

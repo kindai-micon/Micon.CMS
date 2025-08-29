@@ -10,7 +10,7 @@ namespace Micon.CMS.Repositories
         public Task<List<PageCategory>> GetPageCategoriesAsync(PageTemplate pageTemplate, CancellationToken cancellationToken)
         {
             return dbContext.PageTemplates.Where(x => x.Id == pageTemplate.Id)
-                .Select(x => x.PageCategory)
+                .SelectMany(x => x.PageCategories)
                 .ToListAsync(cancellationToken);
         }
 
@@ -78,7 +78,7 @@ namespace Micon.CMS.Repositories
         }
         public async Task<List<PageTemplate>> GetAllWithCategoryAsync(CancellationToken cancellationToken)
         {
-            return await dbContext.PageTemplates.Include(x => x.PageCategory).ToListAsync(cancellationToken);
+            return await dbContext.PageTemplates.Include(x => x.PageCategories).ToListAsync(cancellationToken);
         }
     }
 }
