@@ -147,7 +147,7 @@ namespace Micon.CMS
                 pattern: "/{tenant}/{categoryId}/{pageId}",
                 defaults: new { controller = "Page", action = "Index" });
             app.MapControllerRoute(
-                name: "page",
+                name: "ctest",
                 pattern: "/ComponentTest",
                 defaults: new { controller = "Page", action = "Test" });
             app.MapGet("/", context =>
