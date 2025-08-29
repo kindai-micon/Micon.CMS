@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -14,12 +14,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Views\Shared\Components\Test2\TestAbcView.cshtml" />
-    <EmbeddedResource Include="Views\Shared\Components\Test\TestView.cshtml" />
+    <EmbeddedResource Include="Views\Shared\Components\C1\Default.cshtml" />
+    <EmbeddedResource Include="Views\Shared\Components\C2\Default.cshtml" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Micon.CMS.Library\Micon.CMS.Library.csproj" />
   </ItemGroup>
 
 </Project>

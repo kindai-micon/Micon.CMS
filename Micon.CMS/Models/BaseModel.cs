@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Micon.CMS.Models
 {
-    public class BaseModel
+    public class BaseModel : IBaseModel
     {
         public BaseModel()
         {
@@ -13,7 +13,7 @@ namespace Micon.CMS.Models
         public Guid Id { get; set; }
         
         [ForeignKey(nameof(Tenant))]
-        public Guid? TenantId { get; set; }
+        public Guid TenantId { get; set; }
         public Tenant? Tenant { get;set; }
         [Required]
         public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
