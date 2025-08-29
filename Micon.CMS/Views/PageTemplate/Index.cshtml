@@ -23,9 +23,7 @@
             <th>
                 @Html.DisplayNameFor(model => model.Modified)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PageCategory.Name)
-            </th>
+
             <th></th>
         </tr>
     </thead>
@@ -41,9 +39,6 @@
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Modified)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.PageCategory.Name)
                 </td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id">編集</a> |

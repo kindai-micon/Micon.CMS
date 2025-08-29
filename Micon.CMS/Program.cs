@@ -1,6 +1,7 @@
 using Micon.CMS.Library.Services;
 using Micon.CMS.Models;
 using Micon.CMS.Repositories;
+using Micon.CMS.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -101,7 +102,7 @@ namespace Micon.CMS
             builder.Services.AddScoped<IPageTemplateRepository,PageTemplateRepository>();
             builder.Services.AddScoped<IPageRepository, PageRepository>();
             builder.Services.AddScoped<IComponentRelationRepository, ComponentRelationRepository>();
-
+            builder.Services.AddScoped<ITestService, TestService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -130,10 +131,6 @@ namespace Micon.CMS
             }
             app.UseAuthorization();
 
-            app.MapControllerRoute(
-                name: "page",
-                pattern: "/{tenant}/{categoryId}/{pageId}",
-                defaults: new { controller = "Page", action = "Index" });
 
             app.MapControllerRoute(
                 name: "default",
@@ -145,7 +142,14 @@ namespace Micon.CMS
                 context.Response.Redirect($"/{tenant}/Setting/Home/Index");
                 return Task.CompletedTask;
             });
-
+            app.MapControllerRoute(
+                name: "page",
+                pattern: "/{tenant}/{categoryId}/{pageId}",
+                defaults: new { controller = "Page", action = "Index" });
+            app.MapControllerRoute(
+                name: "page",
+                pattern: "/ComponentTest",
+                defaults: new { controller = "Page", action = "Test" });
             app.MapGet("/", context =>
             {
                 // Redirect to a default tenant or a tenant selection page.

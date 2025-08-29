@@ -9,9 +9,7 @@ namespace Micon.CMS.Models
         [Required]
         [StringLength(256)]
         public string Name { get; set; }
-        [ForeignKey(nameof(PageCategory))]
-        public Guid PageCategoryId { get; set; }
-        public PageCategory PageCategory { get; set; }
+        public List<PageCategory> PageCategories { get; set; }
         public List<Page> Pages { get; set; }
         public List<PageTemplateHistory> PageTemplateHistories { get; set; }
         [ForeignKey(nameof(ComponentRelation))]
