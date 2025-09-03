@@ -133,6 +133,7 @@ namespace Micon.CMS.Repositories
         {
             return dbContext.Pages
                 .Where(x => x.PageCategoryId == pageCategory.Id)
+                .OrderByDescending(x => x.Modified)
                 .ToListAsync(cancellationToken);
         }
         public Task<Page?> GetPageByNameAsync(string pageName, CancellationToken cancellationToken = default)
