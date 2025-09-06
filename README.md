@@ -48,13 +48,13 @@ Micon.CMS は、以下の設計方針で構築されています。
 ## コンポーネント図 / アーキテクチャ
 ```mermaid
 graph TD
-  Browser[Browser] --> App[ASP.NET Core MVC / Micon.CMS]
+  Browser[Browser] --> App["ASP.NET Core MVC / Micon.CMS"]
   App --> Ctrls[Controllers]
   Ctrls --> Repos[Repositories]
   Repos --> DB[(PostgreSQL)]
   App --> Views[Razor Views]
-  App --> Themes[Themes: Plugins/Pages/Themes -> /Themes/]
-  App --> VC[ClassLibrary1 ViewComponents (Embedded Resources)]
+  App --> Themes["Themes: Plugins/Pages/Themes -> /Themes/"]
+  App --> VC["ClassLibrary1 ViewComponents (Embedded Resources)"]
 ```
 
 リクエストフロー（概略）
