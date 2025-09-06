@@ -111,6 +111,7 @@ Aspire AppHost（任意）
 - プラグイン/テーマの追加
   - `Plugins/Pages` 配下に静的資産やRazorページを配置。
   - テーマ資産は `/Themes` として配信されるため、CSS/画像差し替えが容易。
+  - プラグインの具体的な作成手順は `docs/plugins.md` を参照。
 - ViewComponent をライブラリから提供
 ```csharp
 // ClassLibrary1 側（例）
