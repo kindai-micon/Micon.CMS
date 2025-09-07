@@ -292,22 +292,15 @@ public class HelloViewComponent : ViewComponent
 - `Settings`（Dictionary<string,string>）: ページ単位のキー/値設定
 - `Children`（List<PageComponentViewModel>）: 子コンポーネント群
 
-DB 登録（最小例）
-```sql
--- 1) コンポーネント定義
-insert into "Components" ("Id","TenantId","PackageId","Name")
-values ('aaaaaaaa-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001',
-        'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee','MyPlugin.Components.Hello.HelloViewComponent');
-
--- 2) 親子関係（スロット名で子を配置、Order で並び順）
-insert into "ComponentRelations" ("Id","TenantId","ParentId","ChildId","SlotName","Order")
-values ('aaaaaaaa-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000001',
-        null,'aaaaaaaa-0000-0000-0000-000000000001','Main',0);
-
--- 3) ページテンプレートのルートに関連付け
-update "PageTemplates" set "ComponentRelationId"='aaaaaaaa-0000-0000-0000-000000000002'
-where "Id"='bbbbbbbb-0000-0000-0000-000000000001';
-```
+DB 登録（GUI 予定）
+- 今後 GUI（管理画面）から以下を登録・紐付けできるようにします。
+  - `Components`: `PackageId` と `Name`（VC の FQCN）
+  - `ComponentRelations`: 親子・`SlotName`・`Order`
+  - `PageTemplates`: ルートの `ComponentRelationId`
+  - `Pages`/`PageCategories` と `ComponentSettings`（ページ単位のキー/値）
+  
+現時点の運用方針
+- GUI 完成までは、開発環境での初期データ投入（Seed）やテスト用コード/スクリプトで代替してください（本 README では SQL 手順は記載しません）。
 
 依存関係と DI
 - プラグインの VC でもコンストラクタ DI が利用可能（例: `ITestService` の注入）。
