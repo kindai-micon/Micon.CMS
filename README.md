@@ -188,13 +188,13 @@ erDiagram
   }
   APPLICATION_ROLE {
     GUID Id PK
-    GUID? TenantId FK
+    GUID TenantId FK "nullable"
     string Name
   }
   PAGE_TEMPLATE {
     GUID Id PK
     string Name
-    GUID? ComponentRelationId FK
+    GUID ComponentRelationId FK "nullable (root relation)"
   }
   PAGE_CATEGORY {
     GUID Id PK
@@ -228,7 +228,7 @@ erDiagram
   }
   COMPONENT_RELATION {
     GUID Id PK
-    GUID? ParentId FK
+    GUID ParentId FK "nullable"
     GUID ChildId FK
     string SlotName
     int Order
