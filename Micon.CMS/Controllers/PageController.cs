@@ -6,9 +6,9 @@ namespace Micon.CMS.Controllers
 {
     public class PageController(IPageRepository PageRepository) : Controller
     {
-        public async Task<IActionResult> Index(PageCategory pageCategory, CancellationToken cancellationToken)
+        public async Task<IActionResult> Index(Guid pageCategoryId, CancellationToken cancellationToken)
         {
-            var pages = await PageRepository.GetPagesByCategoryAsync(pageCategory, cancellationToken);
+            var pages = await PageRepository.GetPagesByCategoryIdAsync(pageCategoryId, cancellationToken);
             return View(pages);
         }
         public async Task<IActionResult> Delete(Guid Id, CancellationToken cancellationToken)
@@ -18,12 +18,16 @@ namespace Micon.CMS.Controllers
             {
                 await PageRepository.DeleteAsync(pages, cancellationToken);
             }
+            return RedirectToAction("Index","Page");
+        }
+        public async Task<IActionResult> Create(CancellationToken cancellationToken)
+        {
             return View();
         }
         public async Task<IActionResult> Edit(Guid Id, CancellationToken cancellationToken)
         {
-            var page = await PageRepository.GetByIdAsync(Id, cancellationToken);
-            return View(page);
+            var pages = await PageRepository.GetByIdAsync(Id, cancellationToken);
+            return View(pages);
         }
         public async Task<IActionResult> Copy(CancellationToken cancellationToken)
         {

@@ -14,7 +14,7 @@ namespace Micon.CMS.Repositories
         Task AddPageHistoryAsync(Page page, ApplicationUser user, string comment, CancellationToken cancellationToken);
         Task AddPageHistoryAsync(Page page, ApplicationUser user, CancellationToken cancellationToken);
         Task<List<Page>> GetPagesByTemplateAsync(PageTemplate pageTemplate, CancellationToken cancellationToken);
-        Task<List<Page>> GetPagesByCategoryAsync(PageCategory pageCategory, CancellationToken cancellationToken);
+        Task<List<Page>> GetPagesByCategoryIdAsync(Guid pageCategoryId, CancellationToken cancellationToken);
     }
 }
 

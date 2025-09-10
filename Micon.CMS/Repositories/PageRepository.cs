@@ -129,10 +129,10 @@ namespace Micon.CMS.Repositories
                 .Where(x => x.PageTemplateId == pageTemplate.Id)
                 .ToListAsync(cancellationToken);
         }
-        public Task<List<Page>> GetPagesByCategoryAsync(PageCategory pageCategory, CancellationToken cancellationToken)
+        public Task<List<Page>> GetPagesByCategoryIdAsync(Guid pageCategoryId, CancellationToken cancellationToken)
         {
             return dbContext.Pages
-                .Where(x => x.PageCategoryId == pageCategory.Id)
+                .Where(x => x.PageCategoryId == pageCategoryId)
                 .OrderByDescending(x => x.Modified)
                 .ToListAsync(cancellationToken);
         }
