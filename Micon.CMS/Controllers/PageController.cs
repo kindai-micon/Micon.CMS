@@ -26,18 +26,20 @@ namespace Micon.CMS.Controllers
         }
         public async Task<IActionResult> Edit(Guid Id, CancellationToken cancellationToken)
         {
-            var pages = await PageRepository.GetByIdAsync(Id, cancellationToken);
-            return View(pages);
+            var page = await PageRepository.GetByIdAsync(Id, cancellationToken);
+            return View(page);
         }
-        public async Task<IActionResult> Copy(CancellationToken cancellationToken)
+        public async Task<IActionResult> Copy(Guid Id, CancellationToken cancellationToken)
         {
             return View();
         }
-        public async Task<IActionResult> Open(CancellationToken cancellationToken)
+        [HttpPut]
+        public async Task<IActionResult> ToPublic(Guid Id,CancellationToken cancellationToken)
         {
             return View();
         }
-        public async Task<IActionResult> Close(PageCategory pageCategory, CancellationToken cancellationToken)
+        [HttpPut]
+        public async Task<IActionResult> ToPrivate(Guid Id,CancellationToken cancellationToken)
         {
             return View();
         }
