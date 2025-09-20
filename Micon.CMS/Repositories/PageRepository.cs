@@ -40,6 +40,7 @@ namespace Micon.CMS.Repositories
         {
             return dbContext.Pages.Where(x => x.Id == guid).FirstOrDefaultAsync(cancellationToken);
         }
+
         public override Page Update(Page model)
         {
             return Update(model);
@@ -128,7 +129,13 @@ namespace Micon.CMS.Repositories
                 .Where(x => x.PageTemplateId == pageTemplate.Id)
                 .ToListAsync(cancellationToken);
         }
-
+        public Task<List<Page>> GetPagesByCategoryIdAsync(Guid pageCategoryId, CancellationToken cancellationToken)
+        {
+            return dbContext.Pages
+                .Where(x => x.PageCategoryId == pageCategoryId)
+                .OrderByDescending(x => x.Modified)
+                .ToListAsync(cancellationToken);
+        }
         public Task<Page?> GetPageByNameAsync(string pageName, CancellationToken cancellationToken = default)
         {
             return dbContext.Pages.FirstOrDefaultAsync(p => p.Title == pageName, cancellationToken);
