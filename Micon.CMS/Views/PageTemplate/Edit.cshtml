@@ -65,11 +65,15 @@
             },
 
             get filteredComponents() {
-                if (!this.searchQuery) return this.components;
-                const query = this.searchQuery.toLowerCase();
-                return this.components.filter(c =>
-                    c.name.toLowerCase().includes(query)
-                );
+                let result = this.components;
+                if (this.searchQuery) {
+                    const query = this.searchQuery.toLowerCase();
+                    result = result.filter(c =>
+                        c.name.toLowerCase().includes(query)
+                    );
+                }
+                // コンポーネント名でソート
+                return result.sort((a, b) => a.name.localeCompare(b.name));
             },
 
             openComponentList(parentPath, slotName = null) {
@@ -416,7 +420,6 @@
                 info.className = 'component-info';
                 info.innerHTML = `
                     <span>${this.getComponentDisplayName(node)}</span>
-                    <span class="badge bg-secondary ms-2">${node.slotName || 'Main'}</span>
                 `;
 
                 const actions = document.createElement('div');
@@ -461,7 +464,9 @@
                     slotName.textContent = slot;
 
                     const slotChildren = node.children ? node.children.filter(c => c.slotName === slot) : [];
-                    if (slotChildren.length > 0) {
+                    const isSlotFilled = slotChildren.length > 0;
+
+                    if (isSlotFilled) {
                         const badge = document.createElement('span');
                         badge.className = 'badge bg-success';
                         badge.textContent = `${slotChildren.length}件`;
@@ -471,17 +476,20 @@
                         slotHeader.appendChild(slotName);
                     }
 
-                    const addBtn = document.createElement('button');
-                    addBtn.type = 'button';
-                    addBtn.className = 'add-to-slot-btn';
-                    addBtn.textContent = '+ 追加';
-                    addBtn.onclick = () => this.openComponentList(path, slot);
-                    slotHeader.appendChild(addBtn);
+                    // スロットが埋まっていない場合のみ追加ボタンを表示
+                    if (!isSlotFilled) {
+                        const addBtn = document.createElement('button');
+                        addBtn.type = 'button';
+                        addBtn.className = 'add-to-slot-btn';
+                        addBtn.textContent = '+ 追加';
+                        addBtn.onclick = () => this.openComponentList(path, slot);
+                        slotHeader.appendChild(addBtn);
+                    }
 
                     slotDiv.appendChild(slotHeader);
 
                     // スロット内の子要素を再帰的に表示
-                    if (slotChildren.length > 0) {
+                    if (isSlotFilled) {
                         const childrenContainer = document.createElement('div');
                         childrenContainer.className = 'children-container';
 
@@ -513,10 +521,10 @@
 
     .component-node {
         position: relative;
-        border: 2px dashed #dee2e6;
-        border-radius: 8px;
-        padding: 12px;
-        margin: 6px 0;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 6px;
+        margin: 3px 0;
         background: #f8f9fa;
         transition: all 0.3s ease;
     }
@@ -536,32 +544,38 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 8px;
-        padding: 8px;
+        margin-bottom: 4px;
+        padding: 4px;
         background: white;
-        border-radius: 6px;
+        border-radius: 4px;
     }
 
     .component-info {
         font-weight: bold;
         color: #0d6efd;
+        font-size: 13px;
     }
 
     .component-actions {
         display: flex;
-        gap: 5px;
+        gap: 3px;
+    }
+
+    .component-actions .btn {
+        padding: 2px 6px;
+        font-size: 11px;
     }
 
     .add-child-btn {
         display: inline-block;
-        margin: 6px 0;
-        padding: 6px 12px;
+        margin: 3px 0;
+        padding: 4px 8px;
         background: #0d6efd;
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 3px;
         cursor: pointer;
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .add-child-btn:hover {
@@ -577,12 +591,28 @@
         border: 1px solid #dee2e6;
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        padding: 20px;
+        padding: 15px;
         z-index: 1000;
-        max-width: 500px;
+        max-width: 450px;
         width: 90%;
         max-height: 80vh;
         overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .component-list-modal h5 {
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+
+    .component-list-modal .form-control {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+
+    .component-list-modal .form-label {
+        font-size: 13px;
+        margin-bottom: 6px;
     }
 
     .modal-backdrop {
@@ -596,12 +626,24 @@
     }
 
     .component-list-item {
-        padding: 12px;
+        padding: 8px 10px;
         border: 1px solid #dee2e6;
         border-radius: 4px;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         cursor: pointer;
         transition: all 0.2s;
+        word-break: break-word;
+    }
+
+    .component-list-item strong {
+        font-size: 13px;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .component-list-item .badge {
+        font-size: 11px;
+        padding: 2px 6px;
     }
 
     .component-list-item:hover {
@@ -616,53 +658,55 @@
     }
 
     .children-container {
-        margin-left: 12px;
-        padding-left: 12px;
-        border-left: 3px solid #dee2e6;
+        margin-left: 8px;
+        padding-left: 8px;
+        border-left: 2px solid #dee2e6;
     }
 
     .slot-container {
-        margin-top: 8px;
-        padding: 8px;
+        margin-top: 4px;
+        padding: 4px;
         background: #f0f0f0;
-        border-radius: 6px;
-        border-left: 4px solid #6c757d;
+        border-radius: 3px;
+        border-left: 3px solid #6c757d;
     }
 
     .slot-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 6px;
+        margin-bottom: 3px;
+        gap: 4px;
     }
 
     .slot-name {
         font-weight: 600;
-        font-size: 13px;
+        font-size: 11px;
         color: #495057;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
     }
 
     .slot-empty {
-        padding: 12px;
+        padding: 8px;
         text-align: center;
         color: #6c757d;
         font-style: italic;
         background: white;
-        border: 2px dashed #dee2e6;
-        border-radius: 4px;
+        border: 1px dashed #dee2e6;
+        border-radius: 3px;
     }
 
     .add-to-slot-btn {
-        padding: 4px 10px;
-        font-size: 11px;
+        padding: 2px 6px;
+        font-size: 10px;
         background: #28a745;
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 3px;
         cursor: pointer;
         transition: all 0.2s;
+        white-space: nowrap;
     }
 
     .add-to-slot-btn:hover {
@@ -825,13 +869,6 @@
             <template x-if="tree.length > 0">
                 <div>
                     <div id="tree-container"></div>
-
-                    <!-- Add Root Button (when tree has items) -->
-                    <div class="mt-3">
-                        <button type="button" class="add-child-btn" x-on:click="openComponentList(null)">
-                            + ルートコンポーネントを追加
-                        </button>
-                    </div>
                 </div>
             </template>
         </div>
@@ -905,16 +942,13 @@
                             <div>
                                 <template x-for="component in filteredComponents" :key="component.id">
                                     <div class="component-list-item" x-on:click="onComponentSelect(component)">
-                                        <strong x-text="component.name"></strong>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong x-text="component.name"></strong>
+                                            <template x-if="component.slots && component.slots.length > 0">
+                                                <span class="badge bg-info" x-text="`${component.slots.length}スロット`"></span>
+                                            </template>
+                                        </div>
                                         <div class="text-muted small" x-text="component.packageId"></div>
-                                        <template x-if="component.slots && component.slots.length > 0">
-                                            <div class="mt-2">
-                                                <span class="badge bg-info" x-text="`スロット数: ${component.slots.length}`"></span>
-                                                <template x-for="slot in component.slots" :key="slot">
-                                                    <span class="badge bg-light text-dark ms-1" x-text="slot"></span>
-                                                </template>
-                                            </div>
-                                        </template>
                                     </div>
                                 </template>
                             </div>
