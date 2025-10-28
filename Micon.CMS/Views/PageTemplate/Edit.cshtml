@@ -2,8 +2,507 @@
 
 @{
     ViewData["Title"] = "ページテンプレート編集";
-    var components = ViewBag.Components as List<Micon.CMS.Models.Component> ?? new List<Micon.CMS.Models.Component>();
+    var components = ViewBag.Components as List<Micon.CMS.Models.ComponentWithSlotsDto> ?? new List<Micon.CMS.Models.ComponentWithSlotsDto>();
 }
+
+<script>
+    const availableComponents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        components.Select(c => new {
+            id = c.Id.ToString(),
+            packageId = c.PackageId.ToString(),
+            name = c.Name,
+            slots = c.Slots ?? new List<string>()
+        })));
+
+    const componentHierarchy = @Html.Raw(ViewBag.ComponentHierarchy != null ?
+        System.Text.Json.JsonSerializer.Serialize(ViewBag.ComponentHierarchy) : "[]");
+
+    function treeEditor() {
+        return {
+            tree: [],
+            components: availableComponents,
+            showModal: false,
+            searchQuery: '',
+            currentParentPath: null,
+            currentSlotName: null,
+            selectedComponent: null,
+            availableSlots: [],
+            isSaving: false,
+
+            init() {
+                console.log('Tree Editor initialized');
+                console.log('Available components:', this.components);
+                console.log('Component hierarchy:', componentHierarchy);
+
+                // componentHierarchy は既に ComponentTreeNode の配列形式
+                // ワークスペースから直接読み込まれているため、そのまま使用
+                if (componentHierarchy && Array.isArray(componentHierarchy) && componentHierarchy.length > 0) {
+                    try {
+                        this.tree = this.normalizeTree(componentHierarchy);
+                        console.log('Loaded tree from workspace:', this.tree);
+                    } catch (error) {
+                        console.error('Error loading tree from workspace:', error);
+                        this.tree = [];
+                    }
+                } else {
+                    console.log('No component hierarchy available');
+                    this.tree = [];
+                }
+
+                // ツリーをレンダリング
+                this.$nextTick(() => this.renderTree());
+            },
+
+            renderTree() {
+                const container = document.getElementById('tree-container');
+                if (!container) return;
+
+                container.innerHTML = '';
+                this.tree.forEach((node, index) => {
+                    const nodeElement = this.renderComponentNode(node, [index]);
+                    container.appendChild(nodeElement);
+                });
+            },
+
+            get filteredComponents() {
+                if (!this.searchQuery) return this.components;
+                const query = this.searchQuery.toLowerCase();
+                return this.components.filter(c =>
+                    c.name.toLowerCase().includes(query)
+                );
+            },
+
+            openComponentList(parentPath, slotName = null) {
+                this.currentParentPath = Array.isArray(parentPath)
+                    ? [...parentPath]
+                    : parentPath;
+                this.searchQuery = '';
+                this.selectedComponent = null;
+                this.showModal = true;
+
+                if (slotName) {
+                    this.availableSlots = [slotName];
+                    this.currentSlotName = slotName;
+                    return;
+                }
+
+                if (this.currentParentPath && Array.isArray(this.currentParentPath) && this.currentParentPath.length > 0) {
+                    const parentNode = this.getNodeByPath(this.currentParentPath);
+                    const parentSlots = this.getComponentSlots(parentNode);
+                    const freeSlots = parentSlots.length > 0
+                        ? parentSlots.filter(slot => !this.isSlotFilled(parentNode, slot))
+                        : [];
+
+                    if (parentSlots.length > 0 && freeSlots.length === 0) {
+                        alert('利用可能なスロットがありません。');
+                        this.closeModal();
+                        return;
+                    }
+
+                    this.availableSlots = freeSlots.length > 0 ? freeSlots : ['Main'];
+                    this.currentSlotName = this.availableSlots[0] || 'Main';
+                    return;
+                }
+
+                this.availableSlots = ['Main'];
+                this.currentSlotName = 'Main';
+            },
+
+            closeModal() {
+                this.showModal = false;
+                this.currentParentPath = null;
+                this.currentSlotName = null;
+                this.selectedComponent = null;
+                this.availableSlots = [];
+            },
+
+            onComponentSelect(component) {
+                this.selectedComponent = component;
+
+                if (!Array.isArray(this.availableSlots) || this.availableSlots.length === 0) {
+                    if (this.currentParentPath && Array.isArray(this.currentParentPath) && this.currentParentPath.length > 0) {
+                        const parentNode = this.getNodeByPath(this.currentParentPath);
+                        const parentSlots = this.getComponentSlots(parentNode);
+                        const freeSlots = parentSlots.length > 0
+                            ? parentSlots.filter(slot => !this.isSlotFilled(parentNode, slot))
+                            : [];
+
+                        this.availableSlots = freeSlots.length > 0 ? freeSlots : ['Main'];
+                    } else {
+                        this.availableSlots = ['Main'];
+                    }
+                }
+
+                if (!this.currentSlotName) {
+                    this.currentSlotName = this.availableSlots[0] || 'Main';
+                }
+            },
+
+            async selectComponent(component) {
+                const slotName = this.currentSlotName || 'Main';
+                const apiUrl = '@Url.Action("AddComponent", "PageTemplate")';
+
+                try {
+                    console.log('API URL:', apiUrl);
+                    console.log('Request body:', {
+                        pageTemplateId: '@Model.Id',
+                        componentId: component.id,
+                        parentPath: this.currentParentPath,
+                        slotName: slotName
+                    });
+
+                    // サーバーにコンポーネントを追加
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            pageTemplateId: '@Model.Id',
+                            componentId: component.id,
+                            parentPath: this.currentParentPath,
+                            slotName: slotName
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Error response:', errorText);
+                        alert('コンポーネントの追加に失敗しました: ' + errorText);
+                        return;
+                    }
+
+                    const result = await response.json();
+                    console.log('Component added successfully:', result);
+
+                    if (result && Array.isArray(result.tree)) {
+                        this.tree = this.normalizeTree(result.tree);
+                        this.$nextTick(() => this.renderTree());
+                        // プレビューをリロード
+                        this.refreshPreview();
+                    } else {
+                        console.warn('No tree information returned from AddComponent, keeping current state.');
+                    }
+
+                    this.closeModal();
+                } catch (error) {
+                    console.error('Error adding component:', error);
+                    alert('コンポーネントの追加中にエラーが発生しました: ' + error.message);
+                }
+            },
+
+            refreshPreview() {
+                // ページをリロードしてプレビューを更新
+                setTimeout(() => {
+                    location.reload();
+                }, 300);
+            },
+
+            async removeNode(path) {
+                if (!path || path.length === 0) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch('@Url.Action("RemoveComponent", "PageTemplate")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            pageTemplateId: '@Model.Id',
+                            path: path
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Error removing component:', errorText);
+                        alert('コンポーネントの削除に失敗しました: ' + errorText);
+                        return;
+                    }
+
+                    const result = await response.json();
+                    if (result && Array.isArray(result.tree)) {
+                        this.tree = this.normalizeTree(result.tree);
+                        this.$nextTick(() => this.renderTree());
+                        // プレビューをリロード
+                        this.refreshPreview();
+                    } else {
+                        console.warn('No tree information returned from RemoveComponent, keeping current state.');
+                    }
+                } catch (error) {
+                    console.error('Error removing component:', error);
+                    alert('コンポーネントの削除でエラーが発生しました: ' + error.message);
+                }
+            },
+
+            getNodeByPath(path) {
+                let current = { children: this.tree };
+                for (let i = 0; i < path.length; i++) {
+                    current = current.children[path[i]];
+                    if (!current) return null;
+                }
+                return current;
+            },
+
+
+            normalizeTree(nodes) {
+                if (!Array.isArray(nodes)) {
+                    return [];
+                }
+
+                return nodes.map(node => {
+                    const rawComponentId = node.componentId ?? node.ComponentId ?? '';
+                    const rawPackageId = node.packageId ?? node.PackageId ?? '';
+
+                    const normalized = {
+                        componentId: rawComponentId ? String(rawComponentId) : '',
+                        componentName: node.componentName ?? node.ComponentName ?? '',
+                        packageId: rawPackageId ? String(rawPackageId) : '',
+                        slotName: node.slotName ?? node.SlotName ?? 'Main',
+                        settings: node.settings ?? node.Settings ?? {},
+                        children: []
+                    };
+
+                    const childNodes = node.children ?? node.Children ?? [];
+                    normalized.children = this.normalizeTree(childNodes);
+
+                    return normalized;
+                });
+            },
+
+            // ステータス情報の取得
+            getStatus() {
+                if (this.tree.length === 0) {
+                    return '未構成 - ルートコンポーネントが必要です';
+                }
+                return '構成済み - 準備完了';
+            },
+
+            countComponents() {
+                let count = 0;
+                const countRecursive = (node) => {
+                    count++;
+                    if (node.children && node.children.length > 0) {
+                        node.children.forEach(child => countRecursive(child));
+                    }
+                };
+                this.tree.forEach(root => countRecursive(root));
+                return count;
+            },
+
+            getMaxDepth() {
+                if (this.tree.length === 0) return 0;
+                const getDepth = (node) => {
+                    if (!node.children || node.children.length === 0) return 1;
+                    return 1 + Math.max(...node.children.map(child => getDepth(child)));
+                };
+                return Math.max(...this.tree.map(root => getDepth(root)));
+            },
+
+            async saveTree() {
+                if (this.isSaving) return;
+                this.isSaving = true;
+
+                console.log('Saving tree...', this.tree);
+
+                try {
+                    const response = await fetch('@Url.Action("SavePageTemplate", "PageTemplate")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            pageTemplateId: '@Model.Id',
+                            tree: this.tree
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Error response:', errorText);
+                        alert('保存に失敗しました: ' + errorText);
+                        return;
+                    }
+
+                    const result = await response.json();
+                    console.log('Tree saved successfully:', result);
+                    alert('ページテンプレートが正常に保存されました');
+
+                    // ページをリロードして最新の状態を表示
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                } catch (error) {
+                    console.error('Error saving tree:', error);
+                    alert('保存中にエラーが発生しました: ' + error.message);
+                } finally {
+                    this.isSaving = false;
+                }
+            },
+
+            getComponentSlots(node) {
+                if (!node || !node.componentId) {
+                    return ['Main'];
+                }
+
+                const targetId = node.componentId.toString().toLowerCase();
+                const matchedComponent = this.components.find(c => (c.id || '').toLowerCase() === targetId);
+
+                if (matchedComponent && Array.isArray(matchedComponent.slots) && matchedComponent.slots.length > 0) {
+                    return matchedComponent.slots;
+                }
+
+                return ['Main'];
+            },
+
+            isSlotFilled(node, slotName) {
+                if (!node || !node.children || node.children.length === 0) {
+                    return false;
+                }
+                return node.children.some(child => child.slotName === slotName);
+            },
+
+            getComponentDisplayName(node) {
+                if (!node) {
+                    return 'コンポーネント未選択';
+                }
+
+                const resolveName = (rawName) => {
+                    if (!rawName) {
+                        return null;
+                    }
+
+                    const finalSegment = rawName.split('.').pop() || '';
+                    let displayName = finalSegment;
+
+                    if (displayName.endsWith('ViewComponent')) {
+                        displayName = displayName.substring(0, displayName.length - 'ViewComponent'.length);
+                    }
+
+                    if (displayName.length > 0 && !displayName.endsWith('Component')) {
+                        displayName += 'Component';
+                    }
+
+                    return displayName.length > 0 ? displayName : null;
+                };
+
+                let displayName = resolveName(node.componentName);
+                if (displayName) {
+                    return displayName;
+                }
+
+                const targetId = (node.componentId || '').toString().toLowerCase();
+                const matchedComponent = this.components.find(c => (c.id || '').toLowerCase() === targetId);
+                displayName = resolveName(matchedComponent?.name);
+
+                return displayName ?? 'コンポーネント未選択';
+            },
+
+            renderComponentNode(node, path) {
+                const self = this;
+                const container = document.createElement('div');
+
+                // ノードの HTML を構築
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'component-node';
+
+                // ヘッダー
+                const header = document.createElement('div');
+                header.className = 'component-header';
+
+                const info = document.createElement('div');
+                info.className = 'component-info';
+                info.innerHTML = `
+                    <span>${this.getComponentDisplayName(node)}</span>
+                    <span class="badge bg-secondary ms-2">${node.slotName || 'Main'}</span>
+                `;
+
+                const actions = document.createElement('div');
+                actions.className = 'component-actions';
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'btn btn-sm btn-danger';
+                deleteBtn.textContent = '削除';
+                deleteBtn.onclick = () => this.removeNode(path);
+                actions.appendChild(deleteBtn);
+
+                header.appendChild(info);
+                header.appendChild(actions);
+                nodeDiv.appendChild(header);
+
+                // スロット処理
+                const slots = this.getComponentSlots(node);
+
+                // スロットがない場合は、スロット追加ボタンを表示しない
+                if (slots.length === 1 && slots[0] === 'Main') {
+                    // デフォルトの'Main'スロットのみの場合、実際のスロットがあるかチェック
+                    const targetId = node.componentId.toString().toLowerCase();
+                    const matchedComponent = this.components.find(c => (c.id || '').toLowerCase() === targetId);
+
+                    // スロット情報がない場合は子要素の追加を許可しない
+                    if (!matchedComponent || !Array.isArray(matchedComponent.slots) || matchedComponent.slots.length === 0) {
+                        // スロットがないコンポーネント - 子要素追加ボタンを表示しない
+                        container.appendChild(nodeDiv);
+                        return nodeDiv;
+                    }
+                }
+
+                slots.forEach(slot => {
+                    const slotDiv = document.createElement('div');
+                    slotDiv.className = 'slot-container';
+
+                    const slotHeader = document.createElement('div');
+                    slotHeader.className = 'slot-header';
+
+                    const slotName = document.createElement('span');
+                    slotName.className = 'slot-name';
+                    slotName.textContent = slot;
+
+                    const slotChildren = node.children ? node.children.filter(c => c.slotName === slot) : [];
+                    if (slotChildren.length > 0) {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-success';
+                        badge.textContent = `${slotChildren.length}件`;
+                        slotHeader.appendChild(slotName);
+                        slotHeader.appendChild(badge);
+                    } else {
+                        slotHeader.appendChild(slotName);
+                    }
+
+                    const addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'add-to-slot-btn';
+                    addBtn.textContent = '+ 追加';
+                    addBtn.onclick = () => this.openComponentList(path, slot);
+                    slotHeader.appendChild(addBtn);
+
+                    slotDiv.appendChild(slotHeader);
+
+                    // スロット内の子要素を再帰的に表示
+                    if (slotChildren.length > 0) {
+                        const childrenContainer = document.createElement('div');
+                        childrenContainer.className = 'children-container';
+
+                        slotChildren.forEach((child, childIndex) => {
+                            const childPath = [...path, node.children.indexOf(child)];
+                            const childNode = this.renderComponentNode(child, childPath);
+                            childrenContainer.appendChild(childNode);
+                        });
+
+                        slotDiv.appendChild(childrenContainer);
+                    }
+
+                    nodeDiv.appendChild(slotDiv);
+                });
+
+                container.appendChild(nodeDiv);
+                return nodeDiv;
+            }
+        };
+    }
+</script>
 
 <style>
     .preview-container {
@@ -16,8 +515,8 @@
         position: relative;
         border: 2px dashed #dee2e6;
         border-radius: 8px;
-        padding: 20px;
-        margin: 10px 0;
+        padding: 12px;
+        margin: 6px 0;
         background: #f8f9fa;
         transition: all 0.3s ease;
     }
@@ -37,8 +536,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 15px;
-        padding: 10px;
+        margin-bottom: 8px;
+        padding: 8px;
         background: white;
         border-radius: 6px;
     }
@@ -55,14 +554,14 @@
 
     .add-child-btn {
         display: inline-block;
-        margin: 10px 0;
-        padding: 8px 16px;
+        margin: 6px 0;
+        padding: 6px 12px;
         background: #0d6efd;
         color: white;
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .add-child-btn:hover {
@@ -117,14 +616,14 @@
     }
 
     .children-container {
-        margin-left: 20px;
-        padding-left: 20px;
+        margin-left: 12px;
+        padding-left: 12px;
         border-left: 3px solid #dee2e6;
     }
 
     .slot-container {
-        margin-top: 15px;
-        padding: 15px;
+        margin-top: 8px;
+        padding: 8px;
         background: #f0f0f0;
         border-radius: 6px;
         border-left: 4px solid #6c757d;
@@ -134,7 +633,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
     }
 
     .slot-name {
@@ -146,7 +645,7 @@
     }
 
     .slot-empty {
-        padding: 20px;
+        padding: 12px;
         text-align: center;
         color: #6c757d;
         font-style: italic;
@@ -156,8 +655,8 @@
     }
 
     .add-to-slot-btn {
-        padding: 6px 12px;
-        font-size: 12px;
+        padding: 4px 10px;
+        font-size: 11px;
         background: #28a745;
         color: white;
         border: none;
@@ -171,12 +670,12 @@
     }
 
     .real-time-status {
-        margin-bottom: 20px;
-        padding: 15px;
+        margin-bottom: 15px;
+        padding: 12px;
         background: #e8f4f8;
         border-left: 4px solid #0d6efd;
         border-radius: 4px;
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .status-item {
@@ -191,6 +690,78 @@
 
     .status-value {
         color: #0d6efd;
+    }
+
+    .preview-section {
+        margin-top: 40px;
+        padding: 20px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+
+    .preview-section h3 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .component-preview {
+        padding: 20px;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        margin-bottom: 15px;
+    }
+
+    .edit-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .edit-panel {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .panel-header {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #dee2e6;
+        color: #333;
+    }
+
+    .preview-panel {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+    }
+
+    .preview-content {
+        min-height: 200px;
+    }
+
+    .preview-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    @@media (max-width: 992px) {
+        .edit-layout {
+            grid-template-columns: 1fr;
+        }
+        .preview-panel {
+            position: relative;
+            max-height: none;
+        }
     }
 </style>
 
@@ -212,14 +783,14 @@
 }
 
 <div x-data="treeEditor()" x-init="init()">
-        <div class="row mb-3">
-            <div class="col-auto ms-auto">
-                <button type="button" class="btn btn-success" @@click="saveTree()">保存</button>
-            </div>
+    <div class="row mb-3">
+        <div class="col-auto ms-auto">
+            <button type="button" class="btn btn-success" x-on:click="saveTree()">保存</button>
         </div>
+    </div>
 
-        <!-- リアルタイム状態表示 -->
-        <div class="real-time-status">
+    <!-- リアルタイム状態表示 -->
+    <div class="real-time-status">
             <div class="status-item">
                 <span class="status-label">ステータス:</span>
                 <span class="status-value" x-text="getStatus()"></span>
@@ -234,7 +805,11 @@
             </div>
         </div>
 
-        <div class="preview-container">
+    <div class="edit-layout">
+        <!-- 左カラム: 編集UI -->
+        <div class="edit-panel">
+            <div class="panel-header">ツリー構造編集</div>
+
             <!-- Empty State -->
             <template x-if="tree.length === 0">
                 <div class="empty-state">
@@ -249,108 +824,11 @@
             <!-- Component Tree -->
             <template x-if="tree.length > 0">
                 <div>
-                    <template x-for="(node, index) in tree" :key="node.id">
-                        <div class="component-node">
-                            <div class="component-header">
-                                <div class="component-info">
-                                    <span x-text="node.componentName || 'コンポーネント未選択'"></span>
-                                    <span class="badge bg-secondary ms-2" x-text="node.slotName"></span>
-                                </div>
-                                <div class="component-actions">
-                                    <button type="button"
-                                            class="btn btn-sm btn-danger"
-                                            @@click="removeNode([index])">削除</button>
-                                </div>
-                            </div>
-
-                            <!-- スロット表示 -->
-                            <template x-if="Object.keys(node.slots || {}).length > 0">
-                                <template x-for="slotName in Object.keys(node.slots || {})" :key="slotName">
-                                    <div class="slot-container">
-                                        <div class="slot-header">
-                                            <span class="slot-name" x-text="slotName"></span>
-                                            <button type="button"
-                                                    class="add-to-slot-btn"
-                                                    @@click="openComponentList([index], slotName)">
-                                                + 追加
-                                            </button>
-                                        </div>
-                                        <template x-if="(node.slots[slotName] || []).length === 0">
-                                            <div class="slot-empty">このスロットに子要素がありません</div>
-                                        </template>
-                                        <template x-if="(node.slots[slotName] || []).length > 0">
-                                            <template x-for="(child, childIndex) in node.slots[slotName]" :key="child.id">
-                                                <div class="component-node" style="margin-left: 20px;">
-                                                    <div class="component-header">
-                                                        <div class="component-info">
-                                                            <span x-text="child.componentName || 'コンポーネント未選択'"></span>
-                                                            <span class="badge bg-secondary ms-2" x-text="child.slotName"></span>
-                                                        </div>
-                                                        <div class="component-actions">
-                                                            <button type="button"
-                                                                    class="btn btn-sm btn-danger"
-                                                                    @@click="removeNode([index, childIndex])">削除</button>
-                                                        </div>
-                                                    </div>
-                                                    <!-- 子要素のスロット -->
-                                                    <template x-if="Object.keys(child.slots || {}).length > 0">
-                                                        <template x-for="childSlotName in Object.keys(child.slots || {})" :key="childSlotName">
-                                                            <div class="slot-container">
-                                                                <div class="slot-header">
-                                                                    <span class="slot-name" x-text="childSlotName"></span>
-                                                                    <button type="button"
-                                                                            class="add-to-slot-btn"
-                                                                            @@click="openComponentList([index, childIndex], childSlotName)">
-                                                                        + 追加
-                                                                    </button>
-                                                                </div>
-                                                                <template x-if="(child.slots[childSlotName] || []).length === 0">
-                                                                    <div class="slot-empty">このスロットに子要素がありません</div>
-                                                                </template>
-                                                            </div>
-                                                        </template>
-                                                    </template>
-                                                    <!-- スロットがない場合の追加ボタン -->
-                                                    <template x-if="Object.keys(child.slots || {}).length === 0">
-                                                        <div class="slot-container">
-                                                            <div class="slot-header">
-                                                                <span class="slot-name">Main</span>
-                                                                <button type="button"
-                                                                        class="add-to-slot-btn"
-                                                                        @@click="openComponentList([index, childIndex], 'Main')">
-                                                                    + 追加
-                                                                </button>
-                                                            </div>
-                                                            <div class="slot-empty">このスロットに子要素がありません</div>
-                                                        </div>
-                                                    </template>
-                                                </div>
-                                            </template>
-                                        </template>
-                                    </div>
-                                </template>
-                            </template>
-
-                            <!-- スロットがない場合 -->
-                            <template x-if="Object.keys(node.slots || {}).length === 0">
-                                <div class="slot-container">
-                                    <div class="slot-header">
-                                        <span class="slot-name">Main</span>
-                                        <button type="button"
-                                                class="add-to-slot-btn"
-                                                @@click="openComponentList([index], 'Main')">
-                                            + 追加
-                                        </button>
-                                    </div>
-                                    <div class="slot-empty">このスロットに子要素がありません</div>
-                                </div>
-                            </template>
-                        </div>
-                    </template>
+                    <div id="tree-container"></div>
 
                     <!-- Add Root Button (when tree has items) -->
                     <div class="mt-3">
-                        <button type="button" class="add-child-btn" @@click="openComponentList(null)">
+                        <button type="button" class="add-child-btn" x-on:click="openComponentList(null)">
                             + ルートコンポーネントを追加
                         </button>
                     </div>
@@ -358,247 +836,143 @@
             </template>
         </div>
 
-        <!-- Component Selection Modal -->
-        <template x-if="showModal">
-            <div>
-                <div class="modal-backdrop" @@click="closeModal()"></div>
-                <div class="component-list-modal">
-                    <h5 class="mb-3">コンポーネントを選択</h5>
-                    <div class="mb-3">
-                        <input type="text"
-                               class="form-control"
-                               placeholder="コンポーネント名で検索..."
-                               x-model="searchQuery">
-                    </div>
-                    <div>
-                        <template x-for="component in filteredComponents" :key="component.id">
-                            <div class="component-list-item" @@click="selectComponent(component)">
-                                <strong x-text="component.name"></strong>
-                                <div class="text-muted small" x-text="component.packageId"></div>
+        <!-- 右カラム: プレビュー -->
+        <div class="edit-panel preview-panel">
+            <div class="panel-header">コンポーネントプレビュー</div>
+            <div class="preview-content">
+                @{
+                    var previewViewModel = ViewBag.PreviewViewModel as Micon.CMS.Library.Models.Form.PageComponentViewModel;
+                }
+                @if (previewViewModel != null && previewViewModel.ComponentId != Guid.Empty)
+                {
+                    <!-- コンポーネント自体を表示 -->
+                    var type = Micon.CMS.Library.Services.AssemblyService.GetType(previewViewModel.PackageId!.Value, previewViewModel.ComponentName);
+                    try
+                    {
+                        @await Component.InvokeAsync(type, previewViewModel);
+                    }
+                    catch (Exception ex)
+                    {
+                        <div class="alert alert-warning">
+                            コンポーネントの表示に失敗しました: @ex.Message
+                        </div>
+                    }
+                }
+                else if (previewViewModel != null && previewViewModel.Children.Count > 0)
+                {
+                    <!-- ルートコンポーネント（ComponentName="Root"）の場合、子要素を表示 -->
+                    @foreach (var child in previewViewModel.Children)
+                    {
+                        var childType = Micon.CMS.Library.Services.AssemblyService.GetType(child.PackageId!.Value, child.ComponentName);
+                        try
+                        {
+                            @await Component.InvokeAsync(childType, child);
+                        }
+                        catch (Exception ex)
+                        {
+                            <div class="alert alert-warning">
+                                コンポーネント '@child.ComponentName' の表示に失敗しました: @ex.Message
                             </div>
-                        </template>
+                        }
+                    }
+                }
+                else
+                {
+                    <div class="preview-empty">
+                        <p>プレビューはありません</p>
+                        <p>コンポーネントを追加すると、ここにプレビューが表示されます</p>
                     </div>
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-secondary" @@click="closeModal()">キャンセル</button>
-                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Component Selection Modal -->
+    <template x-if="showModal">
+            <div>
+                <div class="modal-backdrop" x-on:click="closeModal()"></div>
+                <div class="component-list-modal">
+                    <!-- コンポーネント選択画面 -->
+                    <template x-if="!selectedComponent">
+                        <div>
+                            <h5 class="mb-3">コンポーネントを選択</h5>
+                            <div class="mb-3">
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="コンポーネント名で検索..."
+                                       x-model="searchQuery">
+                            </div>
+                            <div>
+                                <template x-for="component in filteredComponents" :key="component.id">
+                                    <div class="component-list-item" x-on:click="onComponentSelect(component)">
+                                        <strong x-text="component.name"></strong>
+                                        <div class="text-muted small" x-text="component.packageId"></div>
+                                        <template x-if="component.slots && component.slots.length > 0">
+                                            <div class="mt-2">
+                                                <span class="badge bg-info" x-text="`スロット数: ${component.slots.length}`"></span>
+                                                <template x-for="slot in component.slots" :key="slot">
+                                                    <span class="badge bg-light text-dark ms-1" x-text="slot"></span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-secondary" x-on:click="closeModal()">キャンセル</button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- スロット選択画面 -->
+                    <template x-if="selectedComponent">
+                        <div>
+                            <h5 class="mb-3">コンポーネントを配置</h5>
+                            <div class="mb-3 p-3 bg-light rounded">
+                                <strong x-text="selectedComponent.name"></strong>
+                            </div>
+
+                            <template x-if="availableSlots.length > 0">
+                                <div class="mb-3">
+                                    <label class="form-label">配置するスロット:</label>
+                                    <div>
+                                        <template x-for="slot in availableSlots" :key="slot">
+                                            <div class="form-check">
+                                                <input class="form-check-input"
+                                                       type="radio"
+                                                       :id="`slot-${slot}`"
+                                                       :value="slot"
+                                                       x-model="currentSlotName">
+                                                <label class="form-check-label" :for="`slot-${slot}`">
+                                                    <strong x-text="slot"></strong>
+                                                </label>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template x-if="availableSlots.length === 0">
+                                <div class="alert alert-warning" role="alert">
+                                    このコンポーネントにはスロットがありません
+                                </div>
+                            </template>
+
+                            <div class="mt-3 d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        x-on:click="selectComponent(selectedComponent)">
+                                    配置
+                                </button>
+                                <button type="button"
+                                        class="btn btn-secondary"
+                                        x-on:click="selectedComponent = null; availableSlots = []">
+                                    キャンセル
+                                </button>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </template>
 </div>
-
-@section Scripts {
-    <script>
-        const availableComponents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-            components.Select(c => new {
-                id = c.Id.ToString(),
-                packageId = c.PackageId.ToString(),
-                name = c.Name
-            })));
-
-        const componentHierarchy = @Html.Raw(ViewBag.ComponentHierarchy != null ?
-            System.Text.Json.JsonSerializer.Serialize(ViewBag.ComponentHierarchy) : "[]");
-
-        function treeEditor() {
-            return {
-                tree: [],
-                components: availableComponents,
-                nodeIdCounter: 1,
-                showModal: false,
-                searchQuery: '',
-                currentParentPath: null,
-                currentSlotName: null,
-
-                init() {
-                    console.log('Tree Editor initialized');
-                    console.log('Available components:', this.components);
-                    console.log('Component hierarchy:', componentHierarchy);
-
-                    // 階層構造からツリーを構築
-                    if (componentHierarchy && componentHierarchy.length > 0) {
-                        this.tree = this.buildTreeFromHierarchy(componentHierarchy);
-                        console.log('Loaded tree:', this.tree);
-                    }
-                },
-
-                buildTreeFromHierarchy(hierarchy) {
-                    // Level 1 (ルート) のノードを取得
-                    const rootNodes = hierarchy.filter(h => h.Level === 1);
-
-                    const buildNode = (hierarchyItem) => {
-                        const node = {
-                            id: 'node_' + this.nodeIdCounter++,
-                            relationId: hierarchyItem.Id,
-                            componentId: hierarchyItem.ChildComponentId,
-                            componentName: hierarchyItem.ChildComponentName,
-                            packageId: hierarchyItem.ChildComponentPackageId,
-                            slotName: hierarchyItem.SlotName,
-                            children: [],
-                            slots: {} // スロット管理用
-                        };
-
-                        // このノードの子要素を探す
-                        const children = hierarchy.filter(h =>
-                            h.ParentComponentId === hierarchyItem.ChildComponentId &&
-                            h.Level === hierarchyItem.Level + 1
-                        );
-
-                        // 子要素をスロットごとに分類
-                        children.forEach(child => {
-                            if (!node.slots[child.SlotName]) {
-                                node.slots[child.SlotName] = [];
-                            }
-                            node.slots[child.SlotName].push(buildNode(child));
-                        });
-
-                        // 互換性のため、子要素を配列としても保持
-                        node.children = children.map(child => buildNode(child));
-
-                        return node;
-                    };
-
-                    return rootNodes.map(root => buildNode(root));
-                },
-
-                get filteredComponents() {
-                    if (!this.searchQuery) return this.components;
-                    const query = this.searchQuery.toLowerCase();
-                    return this.components.filter(c =>
-                        c.name.toLowerCase().includes(query)
-                    );
-                },
-
-                openComponentList(parentPath, slotName = 'Main') {
-                    this.currentParentPath = parentPath;
-                    this.currentSlotName = slotName;
-                    this.searchQuery = '';
-                    this.showModal = true;
-                },
-
-                closeModal() {
-                    this.showModal = false;
-                    this.currentParentPath = null;
-                    this.currentSlotName = null;
-                },
-
-                async selectComponent(component) {
-                    const slotName = this.currentSlotName || 'Main';
-                    const parentRelationId = this.currentParentPath !== null ?
-                        this.getNodeByPath(this.currentParentPath)?.relationId : null;
-
-                    try {
-                        // サーバーにコンポーネントを追加
-                        const response = await fetch('@Url.Action("AddComponent", "PageTemplate")', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                pageTemplateId: '@Model.Id',
-                                componentId: component.id,
-                                parentRelationId: parentRelationId,
-                                slotName: slotName
-                            })
-                        });
-
-                        if (!response.ok) {
-                            alert('コンポーネントの追加に失敗しました');
-                            return;
-                        }
-
-                        const result = await response.json();
-
-                        // UIに追加
-                        const newNode = {
-                            id: 'node_' + this.nodeIdCounter++,
-                            relationId: result.id,
-                            componentId: component.id,
-                            componentName: component.name,
-                            packageId: component.packageId,
-                            slotName: slotName,
-                            children: [],
-                            slots: {}
-                        };
-
-                        if (this.currentParentPath === null) {
-                            // ルートとして追加
-                            this.tree.push(newNode);
-                        } else {
-                            // 子要素として追加
-                            const parent = this.getNodeByPath(this.currentParentPath);
-                            if (parent) {
-                                parent.children.push(newNode);
-                                // スロット管理用に追加
-                                if (!parent.slots[slotName]) {
-                                    parent.slots[slotName] = [];
-                                }
-                                parent.slots[slotName].push(newNode);
-                            }
-                        }
-
-                        this.closeModal();
-                    } catch (error) {
-                        console.error('Error adding component:', error);
-                        alert('コンポーネントの追加中にエラーが発生しました');
-                    }
-                },
-
-                removeNode(path) {
-                    if (path.length === 1) {
-                        this.tree.splice(path[0], 1);
-                    } else {
-                        const parentPath = path.slice(0, -1);
-                        const parent = this.getNodeByPath(parentPath);
-                        if (parent) {
-                            parent.children.splice(path[path.length - 1], 1);
-                        }
-                    }
-                },
-
-                getNodeByPath(path) {
-                    let current = { children: this.tree };
-                    for (let i = 0; i < path.length; i++) {
-                        current = current.children[path[i]];
-                        if (!current) return null;
-                    }
-                    return current;
-                },
-
-                // ステータス情報の取得
-                getStatus() {
-                    if (this.tree.length === 0) {
-                        return '未構成 - ルートコンポーネントが必要です';
-                    }
-                    return '構成済み - 準備完了';
-                },
-
-                countComponents() {
-                    let count = 0;
-                    const countRecursive = (node) => {
-                        count++;
-                        if (node.children && node.children.length > 0) {
-                            node.children.forEach(child => countRecursive(child));
-                        }
-                    };
-                    this.tree.forEach(root => countRecursive(root));
-                    return count;
-                },
-
-                getMaxDepth() {
-                    if (this.tree.length === 0) return 0;
-                    const getDepth = (node) => {
-                        if (!node.children || node.children.length === 0) return 1;
-                        return 1 + Math.max(...node.children.map(child => getDepth(child)));
-                    };
-                    return Math.max(...this.tree.map(root => getDepth(root)));
-                },
-
-
-                async saveTree() {
-                    console.log('Saving tree...', this.tree);
-                    alert('保存機能は実装中です。\n現在の木構造:\n' + JSON.stringify(this.tree, null, 2));
-                }
-            };
-        }
-    </script>
-}
-

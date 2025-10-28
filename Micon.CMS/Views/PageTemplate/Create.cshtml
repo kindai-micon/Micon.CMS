@@ -1,7 +1,34 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model Micon.CMS.Models.PageTemplate
+
 @{
+    ViewData["Title"] = "ページテンプレート新規作成";
 }
 
-<h2>ページテンプレート新規作成</h2>
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>ページテンプレート新規作成</h2>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="CreateSubmit" method="post">
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">テンプレート名</label>
+                    <input asp-for="Name" class="form-control" placeholder="テンプレート名を入力してください" required />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">作成</button>
+                    <a asp-action="Index" class="btn btn-secondary">キャンセル</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

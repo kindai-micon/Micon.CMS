@@ -24,6 +24,7 @@ namespace Micon.CMS
         public DbSet<PageHistory> PageHistories { get; set; }
         public DbSet<PageTemplate> PageTemplates { get; set; }
         public DbSet<PageTemplateHistory> PageTemplateHistories { get; set; }
+        public DbSet<PageTemplateWorkspace> PageTemplateWorkspaces { get; set; }
         public DbSet<Component> Components { get; set; }
         public DbSet<ComponentRelation> ComponentRelations { get; set; }
         public DbSet<ComponentSetting> ComponentSettings { get; set; }
@@ -146,6 +147,19 @@ namespace Micon.CMS
                 .HasForeignKey(t => t.ComponentId);
                 builder.HasIndex(t => t.TenantId);
                 builder.HasIndex(t => t.Id);
+            });
+
+            modelBuilder.Entity<PageTemplateWorkspace>(builder =>
+            {
+                builder.HasIndex(t => t.TenantId);
+                builder.HasIndex(t => t.PageTemplateId);
+                builder.HasOne(t => t.PageTemplate)
+                    .WithMany()
+                    .HasForeignKey(t => t.PageTemplateId);
+                builder.HasOne(t => t.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(t => t.CreatedByUserId)
+                    .IsRequired(false);
             });
 
         }
