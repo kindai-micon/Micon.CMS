@@ -1,8 +1,26 @@
 @model Micon.CMS.Library.Models.Form.PageComponentViewModel
 
-<h1>C1 Component</h1>
-<div>
-    @await Html.LoadChildComponentAsync(Component,"ChildSlot")
-    @await Html.LoadChildComponentAsync(Component,"ChildSlot2")
+<style>
+    .c1-component {
+        border: 3px solid #2563eb;
+        padding: 20px;
+        margin: 15px;
+        border-radius: 8px;
+        background-color: #f0f9ff;
+    }
 
+    .c1-component h1 {
+        color: #1e40af;
+        margin-top: 0;
+        border-bottom: 2px solid #2563eb;
+        padding-bottom: 10px;
+    }
+</style>
+
+<div class="c1-component">
+    <h1>C1 Component</h1>
+    <div>
+        @await Html.LoadChildComponentAsync(Component,"ChildSlot")
+        @await Html.LoadChildComponentAsync(Component,"ChildSlot2")
+    </div>
 </div>

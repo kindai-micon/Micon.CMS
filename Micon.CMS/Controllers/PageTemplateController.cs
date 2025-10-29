@@ -741,9 +741,9 @@ namespace Micon.CMS.Controllers
             {
                 await MergeChildrenAsync(newNode, relation, existingRelation, existingChildrenMap, cancellationToken);
             }
-            else
+            else if (existingRelation != null)
             {
-                // 子要素がない場合、既存の子を全削除
+                // 子要素がない場合で、既存の子がある場合のみ削除
                 await DeleteAllChildrenAsync(existingRelation, cancellationToken);
             }
 
@@ -779,10 +779,23 @@ namespace Micon.CMS.Controllers
         /// </summary>
         private async Task DeleteComponentRelationTree(ComponentRelation relation, CancellationToken cancellationToken)
         {
-            if (relation == null)
+            await DeleteComponentRelationTreeWithTracking(relation, new HashSet<Guid>(), cancellationToken);
+        }
+
+        /// <summary>
+        /// ComponentRelationツリーの削除（削除済みIDを追跡）
+        /// </summary>
+        private async Task DeleteComponentRelationTreeWithTracking(
+            ComponentRelation relation,
+            HashSet<Guid> deletedIds,
+            CancellationToken cancellationToken)
+        {
+            if (relation == null || deletedIds.Contains(relation.Id))
             {
                 return;
             }
+
+            deletedIds.Add(relation.Id);
 
             // このComponentRelationの子要素（relation.Child の下の要素）を再帰的に削除
             if (relation.Child?.Children != null && relation.Child.Children.Count > 0)
@@ -790,17 +803,7 @@ namespace Micon.CMS.Controllers
                 var childrenToDelete = relation.Child.Children.ToList();
                 foreach (var child in childrenToDelete)
                 {
-                    await DeleteComponentRelationTree(child, cancellationToken);
-                }
-            }
-
-            // 親（relation.Parent）の子リストからこのRelationを削除
-            if (relation.Parent?.Children != null)
-            {
-                var relationsToRemove = relation.Parent.Children.Where(r => r.Id == relation.Id).ToList();
-                foreach (var r in relationsToRemove)
-                {
-                    relation.Parent.Children.Remove(r);
+                    await DeleteComponentRelationTreeWithTracking(child, deletedIds, cancellationToken);
                 }
             }
 
@@ -938,15 +941,24 @@ namespace Micon.CMS.Controllers
         /// </summary>
         private async Task DeleteAllChildrenAsync(ComponentRelation existingRelation, CancellationToken cancellationToken)
         {
-            if (existingRelation?.Child?.Children == null)
+            if (existingRelation == null)
             {
                 return;
             }
 
-            var childrenToDelete = existingRelation.Child.Children.ToList();
-            foreach (var child in childrenToDelete)
+            // ParentIdがexistingRelation.ChildIdである全てのRelationを削除
+            var parentId = existingRelation.ChildId;
+
+            // データベースから削除対象の子要素を全て取得
+            var allRelations = await _componentRelationRepository.GetAllAsync(cancellationToken);
+            var childrenToDelete = allRelations
+                .Where(r => r.ParentId == parentId)
+                .ToList();
+
+            // 各子要素に対してツリー削除を実行
+            foreach (var childRelation in childrenToDelete)
             {
-                await DeleteComponentRelationTree(child, cancellationToken);
+                await DeleteComponentRelationTree(childRelation, cancellationToken);
             }
         }
 
