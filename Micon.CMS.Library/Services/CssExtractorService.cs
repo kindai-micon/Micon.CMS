@@ -103,7 +103,8 @@ namespace Micon.CMS.Library.Services
 
         /// <summary>
         /// 単一のセレクタをスコープ化
-        /// 例: .component → .{packageId}_{ComponentName}_component .component
+        /// 例: .component → .{packageId}_{ComponentName}_component
+        /// 例: .component h1 → .{packageId}_{ComponentName}_component h1
         /// </summary>
         private string ScopifySelector(string selector, string scopePrefix)
         {
@@ -113,11 +114,34 @@ namespace Micon.CMS.Library.Services
             {
                 var trimmed = s.Trim();
 
-                // セレクタの前にスコーププレフィックスを付ける
-                if (!trimmed.StartsWith($".{scopePrefix}"))
+                // 最初のセレクタをスコープ化
+                // 例: ".component" → ".{scopePrefix}_component"
+                // 例: ".component h1" → ".{scopePrefix}_component h1"
+                var firstSpaceIndex = trimmed.IndexOf(' ');
+                string firstSelector;
+                string rest;
+
+                if (firstSpaceIndex > 0)
                 {
-                    return $".{scopePrefix} {trimmed}";
+                    firstSelector = trimmed.Substring(0, firstSpaceIndex);
+                    rest = trimmed.Substring(firstSpaceIndex);
                 }
+                else
+                {
+                    firstSelector = trimmed;
+                    rest = string.Empty;
+                }
+
+                // 最初のセレクタにスコーププレフィックスを付ける
+                // ".component" → ".{scopePrefix}_component"
+                if (firstSelector.StartsWith("."))
+                {
+                    var className = firstSelector.Substring(1); // "component"
+                    var scopedFirstSelector = $".{scopePrefix}_{className}";
+                    return scopedFirstSelector + rest;
+                }
+
+                // クラスセレクタでない場合はそのまま返す
                 return trimmed;
             });
 

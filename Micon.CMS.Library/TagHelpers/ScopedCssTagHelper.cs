@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Logging;
 using Micon.CMS.Library.Models.Form;
+using System.Reflection;
 
 namespace Micon.CMS.Library.TagHelpers
 {
@@ -42,57 +43,80 @@ namespace Micon.CMS.Library.TagHelpers
             {
                 if (string.IsNullOrEmpty(ScopedClassName))
                 {
-                    _logger.LogWarning("asp-scoped-css attribute is empty");
                     return;
                 }
 
-                // @Model から ComponentId と PackageId を取得
+                // ViewComponent のアセンブリから MiconCmsSettings.PackageId を取得
                 var model = ViewContext?.ViewData.Model;
+
                 if (model == null)
                 {
-                    _logger.LogWarning("Model is null in ScopedCssTagHelper");
                     return;
                 }
 
-                // PageComponentViewModel を想定
-                if (model is not PageComponentViewModel pageComponentViewModel)
+                // Model が PageComponentViewModel であることを確認
+                var pageComponentViewModel = model as PageComponentViewModel;
+                if (pageComponentViewModel == null)
                 {
-                    _logger.LogWarning($"Model is not PageComponentViewModel: {model.GetType().Name}");
                     return;
                 }
 
                 var packageId = pageComponentViewModel.PackageId;
                 var componentName = pageComponentViewModel.ComponentName;
 
-                if (!packageId.HasValue || packageId.Value == Guid.Empty || string.IsNullOrEmpty(componentName))
+                if (!packageId.HasValue || packageId.Value == Guid.Empty)
                 {
-                    _logger.LogWarning("PackageId or ComponentName is empty");
                     return;
                 }
 
-                // スコープ用のクラス名を生成
-                // 形式: {packageId}_{ComponentName}_{specifiedClassName}
+                if (string.IsNullOrEmpty(componentName))
+                {
+                    return;
+                }
+
+                // ComponentName から名前空間を除去（最後の . 以降を取得）
+                var simpleComponentName = componentName.Split('.').Last();
+
                 var packageIdStr = packageId.Value.ToString("N");
 
-                // スコープ付きクラス名を生成
-                var scopedClass = $"{packageIdStr}_{componentName}_{ScopedClassName}";
+                // 複数のクラス名に対応（スペース区切り）
+                var classNames = ScopedClassName.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                var scopedClasses = new List<string>();
 
-                // class 属性に追加
+                foreach (var className in classNames)
+                {
+                    var trimmedClassName = className.Trim();
+                    if (!string.IsNullOrEmpty(trimmedClassName))
+                    {
+                        // スコープ付きクラス名を生成（simpleComponentName を使用）
+                        var scopedClass = $"{packageIdStr}_{simpleComponentName}_{trimmedClassName}";
+                        scopedClasses.Add(scopedClass);
+                    }
+                }
+
+                if (scopedClasses.Count == 0)
+                {
+                    _logger.LogWarning("No valid class names found after splitting");
+                    return;
+                }
+
+                // class 属性に追加（既存のクラスとマージ）
+                var allScopedClasses = string.Join(" ", scopedClasses);
                 if (output.Attributes.ContainsName("class"))
                 {
                     var existingClass = output.Attributes["class"].Value?.ToString() ?? string.Empty;
-                    output.Attributes.SetAttribute("class", $"{scopedClass} {existingClass}");
+                    var mergedClass = string.IsNullOrWhiteSpace(existingClass)
+                        ? allScopedClasses
+                        : $"{allScopedClasses} {existingClass}";
+                    output.Attributes.SetAttribute("class", mergedClass);
                 }
                 else
                 {
-                    output.Attributes.SetAttribute("class", scopedClass);
+                    output.Attributes.SetAttribute("class", allScopedClasses);
                 }
-
-                _logger.LogInformation($"Applied scoped CSS class: {scopedClass}");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error in ScopedCssTagHelper: {ex.Message}");
                 // エラーが発生してもタグ出力は続行
             }
         }

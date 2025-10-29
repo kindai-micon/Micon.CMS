@@ -99,18 +99,31 @@ namespace Micon.CMS.Library.Providers
             {
                 var originalContent = reader.ReadToEnd();
 
-                // コンポーネント名を抽出（例: Views/Shared/Components/C1/Default.cshtml → C1ViewComponent）
-                // ※ ここではViewComponent クラス名が必要
+                // コンポーネント名を抽出（例: Views/Shared/Components/C1/Default.cshtml → C1）
                 var componentName = ExtractComponentName(_subpath);
 
-                // PackageId はDLL全体で共通（仮の値）
-                var packageId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+                // アセンブリから MiconCmsSettings.PackageId を取得
+                var packageId = GetPackageIdFromAssembly();
+                if (packageId == Guid.Empty)
+                {
+                    _logger.LogWarning($"Could not find PackageId in assembly, skipping CSS processing for {_subpath}");
+                    // PackageId が見つからない場合は、CSS 処理をスキップして元の Razor を返す
+                    _cachedContent = System.Text.Encoding.UTF8.GetBytes(originalContent);
+                    return new MemoryStream(_cachedContent);
+                }
 
                 // CSS を抽出・スコープ化
                 var (cleanedRazor, cssContent) = _cssExtractor.ExtractCss(
                     originalContent,
                     componentName,
                     packageId);
+
+                // 抽出した CSS を CssService に登録
+                if (!string.IsNullOrEmpty(cssContent) && _cssService != null)
+                {
+                    _cssService.RegisterCssContent(packageId, componentName, cssContent);
+                    _logger.LogInformation($"Registered CSS for {componentName} (PackageId: {packageId})");
+                }
 
                 _logger.LogInformation(
                     $"Razor '{_subpath}' processed with scoped CSS");
@@ -122,18 +135,64 @@ namespace Micon.CMS.Library.Providers
         }
 
         /// <summary>
+        /// アセンブリから MiconCmsSettings.PackageId を取得
+        /// </summary>
+        private Guid GetPackageIdFromAssembly()
+        {
+            try
+            {
+                var assembly = typeof(CssExtractingFileProvider).Assembly;
+
+                // 現在のアセンブリではなく、EmbeddedFileProvider のアセンブリから取得する必要がある
+                // ここでは、Program.cs で登録されたアセンブリから PackageId を取得する必要があります
+                // 一時的な解決策として、全アセンブリを検索します
+
+                var appDomain = AppDomain.CurrentDomain;
+                foreach (var asm in appDomain.GetAssemblies())
+                {
+                    var miconCmsSettingsType = asm.GetTypes()
+                        .FirstOrDefault(t => t.IsPublic && t.IsClass && t.Name == "MiconCmsSettings");
+
+                    if (miconCmsSettingsType != null)
+                    {
+                        var packageIdField = miconCmsSettingsType.GetField("PackageId",
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+
+                        if (packageIdField != null && packageIdField.IsStatic)
+                        {
+                            var packageId = (Guid?)packageIdField.GetValue(null);
+                            if (packageId.HasValue && packageId.Value != Guid.Empty)
+                            {
+                                _logger.LogInformation($"Found PackageId: {packageId.Value} in assembly: {asm.FullName}");
+                                return packageId.Value;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting PackageId from assembly: {ex.Message}");
+            }
+
+            return Guid.Empty;
+        }
+
+        /// <summary>
         /// ファイルパスからコンポーネント名を抽出
-        /// 例: Views/Shared/Components/C1/Default.cshtml → C1
+        /// 例: Views/Shared/Components/C1/Default.cshtml → C1ViewComponent
         /// </summary>
         private string ExtractComponentName(string subpath)
         {
-            // Components/[ComponentName]/Default.cshtml の [ComponentName] を抽出
+            // Components/[ComponentName]/[FileName].cshtml → [ComponentName]ViewComponent
             var parts = subpath.Split('/', '\\');
             var componentsIndex = Array.IndexOf(parts, "Components");
 
             if (componentsIndex >= 0 && componentsIndex + 1 < parts.Length)
             {
-                return parts[componentsIndex + 1];
+                var componentDirectoryName = parts[componentsIndex + 1];
+                // ViewComponent クラス名の形式: {DirectoryName}ViewComponent
+                return $"{componentDirectoryName}ViewComponent";
             }
 
             return Path.GetFileNameWithoutExtension(subpath);
