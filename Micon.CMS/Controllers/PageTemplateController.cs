@@ -569,22 +569,19 @@ namespace Micon.CMS.Controllers
                     return Ok(new { message = "PageTemplate saved successfully (empty tree)" });
                 }
 
-                // ツリーを ComponentRelation に変換して保存
+                // 既存の ComponentRelation ツリーを取得
+                ComponentRelation existingRootRelation = null;
+                if (pageTemplate.ComponentRelationId.HasValue)
+                {
+                    existingRootRelation = await _componentRelationRepository.GetByIdAsync(pageTemplate.ComponentRelationId.Value, cancellationToken);
+                }
+
+                // ツリーを差分管理で保存
                 var rootNode = request.Tree[0];
-                var rootRelation = await CreateComponentRelationTree(rootNode, null, 0, cancellationToken);
+                var rootRelation = await MergeComponentRelationTree(rootNode, existingRootRelation, null, 0, cancellationToken);
 
                 if (rootRelation != null)
                 {
-                    // 既存の ComponentRelation を削除して新しいものに置き換え
-                    if (pageTemplate.ComponentRelationId.HasValue)
-                    {
-                        var existingRelation = await _componentRelationRepository.GetByIdAsync(pageTemplate.ComponentRelationId.Value, cancellationToken);
-                        if (existingRelation != null)
-                        {
-                            await _componentRelationRepository.DeleteAsync(existingRelation, cancellationToken);
-                        }
-                    }
-
                     pageTemplate.ComponentRelationId = rootRelation.Id;
                     await _pageTemplateRepository.UpdateAsync(pageTemplate, cancellationToken);
                 }
@@ -709,6 +706,157 @@ namespace Micon.CMS.Controllers
             }
 
             return relation;
+        }
+
+        /// <summary>
+        /// 既存のComponentRelationツリーと新しいツリーを比較・マージして差分管理
+        /// PackageId と Name が同じコンポーネントの関係は既存のレコードを再利用
+        /// </summary>
+        private async Task<ComponentRelation> MergeComponentRelationTree(
+            ComponentTreeNode newNode,
+            ComponentRelation existingRelation,
+            Guid? parentId,
+            int order,
+            CancellationToken cancellationToken)
+        {
+            if (!Guid.TryParse(newNode.ComponentId, out var componentId))
+            {
+                return null;
+            }
+
+            var component = await _componentRepository.GetByIdAsync(componentId, cancellationToken);
+            if (component == null)
+            {
+                return null;
+            }
+
+            ComponentRelation relation;
+
+            // 既存の関連がある場合、PackageId + Name が一致するかチェック
+            if (existingRelation != null && existingRelation.Child != null &&
+                existingRelation.Child.PackageId == component.PackageId &&
+                existingRelation.Child.Name == component.Name &&
+                existingRelation.SlotName == (newNode.SlotName ?? "Main") &&
+                existingRelation.ParentId == parentId &&
+                existingRelation.Order == order)
+            {
+                // 完全に同じ構造 → 既存レコードをそのまま使用
+                relation = existingRelation;
+            }
+            else
+            {
+                // 新しい関連を作成
+                relation = new ComponentRelation
+                {
+                    Id = Guid.NewGuid(),
+                    ParentId = parentId,
+                    ChildId = componentId,
+                    SlotName = newNode.SlotName ?? "Main",
+                    Order = order,
+                    IsPriority = false
+                };
+
+                await _componentRelationRepository.CreateAsync(relation, cancellationToken);
+            }
+
+            // 既存の子要素のマッピング（PackageId + Name で照合）
+            var existingChildrenByKey = new Dictionary<string, ComponentRelation>();
+            if (existingRelation?.Child?.Children != null)
+            {
+                foreach (var child in existingRelation.Child.Children)
+                {
+                    var key = $"{child.Child?.PackageId}_{child.Child?.Name}_{child.SlotName}";
+                    existingChildrenByKey[key] = child;
+                }
+            }
+
+            // 新しい子要素を処理
+            if (newNode.Children != null && newNode.Children.Count > 0)
+            {
+                var processedChildren = new HashSet<string>();
+                int childOrder = 0;
+
+                foreach (var newChild in newNode.Children)
+                {
+                    if (!Guid.TryParse(newChild.ComponentId, out var childComponentId))
+                    {
+                        continue;
+                    }
+
+                    var childComponent = await _componentRepository.GetByIdAsync(childComponentId, cancellationToken);
+                    if (childComponent == null)
+                    {
+                        continue;
+                    }
+
+                    var key = $"{childComponent.PackageId}_{childComponent.Name}_{newChild.SlotName ?? "Main"}";
+                    processedChildren.Add(key);
+
+                    // 既存の関連を探す
+                    ComponentRelation existingChild = null;
+                    if (existingChildrenByKey.TryGetValue(key, out var foundChild))
+                    {
+                        existingChild = foundChild;
+                    }
+
+                    // 再帰的にマージ
+                    await MergeComponentRelationTree(newChild, existingChild, relation.ChildId, childOrder++, cancellationToken);
+                }
+
+                // 処理されなかった子要素（削除対象）を削除
+                foreach (var key in existingChildrenByKey.Keys.Where(k => !processedChildren.Contains(k)))
+                {
+                    var relationToDelete = existingChildrenByKey[key];
+                    await DeleteComponentRelationTree(relationToDelete, cancellationToken);
+                }
+            }
+            else
+            {
+                // 新しいツリーに子要素がない場合、既存の子要素をすべて削除
+                if (existingRelation?.Child?.Children != null)
+                {
+                    foreach (var child in existingRelation.Child.Children.ToList())
+                    {
+                        await DeleteComponentRelationTree(child, cancellationToken);
+                    }
+                }
+            }
+
+            return relation;
+        }
+
+        /// <summary>
+        /// ComponentRelation と その子孫をすべて削除
+        /// </summary>
+        private async Task DeleteComponentRelationTree(ComponentRelation relation, CancellationToken cancellationToken)
+        {
+            if (relation == null)
+            {
+                return;
+            }
+
+            // このComponentRelationの子要素（relation.Child の下の要素）を再帰的に削除
+            if (relation.Child?.Children != null && relation.Child.Children.Count > 0)
+            {
+                var childrenToDelete = relation.Child.Children.ToList();
+                foreach (var child in childrenToDelete)
+                {
+                    await DeleteComponentRelationTree(child, cancellationToken);
+                }
+            }
+
+            // 親（relation.Parent）の子リストからこのRelationを削除
+            if (relation.Parent?.Children != null)
+            {
+                var relationsToRemove = relation.Parent.Children.Where(r => r.Id == relation.Id).ToList();
+                foreach (var r in relationsToRemove)
+                {
+                    relation.Parent.Children.Remove(r);
+                }
+            }
+
+            // このComponentRelationを削除
+            await _componentRelationRepository.DeleteAsync(relation, cancellationToken);
         }
 
         /// <summary>
