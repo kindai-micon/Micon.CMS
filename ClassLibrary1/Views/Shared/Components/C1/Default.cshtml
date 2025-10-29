@@ -1,7 +1,7 @@
 @model Micon.CMS.Library.Models.Form.PageComponentViewModel
 
 <style>
-    .c1-component {
+    .component {
         border: 3px solid #2563eb;
         padding: 20px;
         margin: 15px;
@@ -9,7 +9,7 @@
         background-color: #f0f9ff;
     }
 
-    .c1-component h1 {
+    .component h1 {
         color: #1e40af;
         margin-top: 0;
         border-bottom: 2px solid #2563eb;
@@ -17,7 +17,7 @@
     }
 </style>
 
-<div class="c1-component">
+<div asp-scoped-css="component">
     <h1>C1 Component</h1>
     <div>
         @await Html.LoadChildComponentAsync(Component,"ChildSlot")

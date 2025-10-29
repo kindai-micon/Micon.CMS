@@ -1,4 +1,5 @@
 using Micon.CMS.Library.Services;
+using Micon.CMS.Library.Providers;
 using Micon.CMS.Models;
 using Micon.CMS.Repositories;
 using Micon.CMS.Services;
@@ -56,11 +57,29 @@ namespace Micon.CMS
                 mvcBuilder.AddApplicationPart(assembly);
             }
 
+            // CSS 抽出サービスを DI に登録
+            builder.Services.AddScoped<CssExtractorService>();
+
             mvcBuilder.AddRazorRuntimeCompilation(options =>
             {
+                // DI コンテナをビルドしてサービスを取得
+                var serviceProvider = builder.Services.BuildServiceProvider();
+                var cssExtractor = serviceProvider.GetRequiredService<CssExtractorService>();
+                var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+
                 foreach (var assembly in pluginAssemblies)
                 {
-                    options.FileProviders.Add(new EmbeddedFileProvider(assembly));
+                    var embeddedProvider = new EmbeddedFileProvider(assembly);
+
+                    // CssExtractingFileProvider でラップ
+                    // ※ CssService は現在不要（メモリキャッシュは後で実装予定）
+                    var cssExtractingProvider = new CssExtractingFileProvider(
+                        embeddedProvider,
+                        cssExtractor,
+                        null, // CssService は null
+                        loggerFactory.CreateLogger<CssExtractingFileProvider>());
+
+                    options.FileProviders.Add(cssExtractingProvider);
                 }
             });
 
