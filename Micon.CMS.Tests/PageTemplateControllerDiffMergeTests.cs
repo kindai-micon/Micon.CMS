@@ -426,7 +426,8 @@ namespace Micon.CMS.Tests
                 componentRelationRepository,
                 workspaceRepository,
                 null!,
-                slotAnalyzerService);
+                slotAnalyzerService,
+                null!);
         }
 
         /// <summary>

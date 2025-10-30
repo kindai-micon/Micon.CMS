@@ -1,4 +1,4 @@
-﻿@model Micon.CMS.Models.PageTemplate
+@model Micon.CMS.Models.PageTemplate
 
 @{
     ViewData["Title"] = "ページテンプレート編集";
@@ -251,31 +251,31 @@
             },
 
 
-            normalizeTree(nodes) {
-                if (!Array.isArray(nodes)) {
-                    return [];
-                }
-
-                return nodes.map(node => {
-                    const rawComponentId = node.componentId ?? node.ComponentId ?? '';
-                    const rawPackageId = node.packageId ?? node.PackageId ?? '';
-
-                    const normalized = {
-                        componentId: rawComponentId ? String(rawComponentId) : '',
-                        componentName: node.componentName ?? node.ComponentName ?? '',
-                        packageId: rawPackageId ? String(rawPackageId) : '',
-                        slotName: node.slotName ?? node.SlotName ?? 'Main',
-                        settings: node.settings ?? node.Settings ?? {},
-                        children: []
-                    };
-
-                    const childNodes = node.children ?? node.Children ?? [];
-                    normalized.children = this.normalizeTree(childNodes);
-
-                    return normalized;
-                });
-            },
-
+            normalizeTree(nodes) {
+                if (!Array.isArray(nodes)) {
+                    return [];
+                }
+
+                return nodes.map(node => {
+                    const rawComponentId = node.componentId ?? node.ComponentId ?? '';
+                    const rawPackageId = node.packageId ?? node.PackageId ?? '';
+
+                    const normalized = {
+                        componentId: rawComponentId ? String(rawComponentId) : '',
+                        componentName: node.componentName ?? node.ComponentName ?? '',
+                        packageId: rawPackageId ? String(rawPackageId) : '',
+                        slotName: node.slotName ?? node.SlotName ?? 'Main',
+                        settings: node.settings ?? node.Settings ?? {},
+                        children: []
+                    };
+
+                    const childNodes = node.children ?? node.Children ?? [];
+                    normalized.children = this.normalizeTree(childNodes);
+
+                    return normalized;
+                });
+            },
+
             // ステータス情報の取得
             getStatus() {
                 if (this.tree.length === 0) {

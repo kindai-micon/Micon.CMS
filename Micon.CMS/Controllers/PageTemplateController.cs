@@ -1,5 +1,6 @@
 ﻿using Micon.CMS.Models;
 using Micon.CMS.Repositories;
+using Micon.CMS.Services;
 using Micon.CMS.Library.Models.Form;
 using Micon.CMS.Library.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ namespace Micon.CMS.Controllers
         private readonly IPageTemplateWorkspaceRepository _workspaceRepository;
         private readonly IViewComponentHelper _viewComponentHelper;
         private readonly ComponentSlotAnalyzerService _slotAnalyzerService;
+        private readonly IComponentCacheService _componentCacheService;
 
         public PageTemplateController(
             IPageTemplateRepository pageTemplateRepository,
@@ -26,7 +28,8 @@ namespace Micon.CMS.Controllers
             IComponentRelationRepository componentRelationRepository,
             IPageTemplateWorkspaceRepository workspaceRepository,
             IViewComponentHelper viewComponentHelper,
-            ComponentSlotAnalyzerService slotAnalyzerService)
+            ComponentSlotAnalyzerService slotAnalyzerService,
+            IComponentCacheService componentCacheService)
         {
             _pageTemplateRepository = pageTemplateRepository;
             _componentRepository = componentRepository;
@@ -34,6 +37,7 @@ namespace Micon.CMS.Controllers
             _workspaceRepository = workspaceRepository;
             _viewComponentHelper = viewComponentHelper;
             _slotAnalyzerService = slotAnalyzerService;
+            _componentCacheService = componentCacheService;
         }
         public async Task<IActionResult> Index(CancellationToken cancellation)
         {
@@ -101,8 +105,8 @@ namespace Micon.CMS.Controllers
                 Console.WriteLine($"Workspace found: {workspace.Id}, Data length: {workspace.WorkspaceData.Length}");
             }
 
-            // コンポーネント情報とスロット情報を取得
-            var components = await _componentRepository.GetAllAsync(cancellationToken);
+            // コンポーネント情報とスロット情報を取得（キャッシュから）
+            var components = await _componentCacheService.GetCachedComponentsAsync();
             var componentsWithSlots = await BuildComponentsWithSlots(components, cancellationToken);
             ViewBag.Components = componentsWithSlots;
             ViewBag.WorkspaceId = workspace.Id;
@@ -245,10 +249,11 @@ namespace Micon.CMS.Controllers
                 }
 
                 Console.WriteLine($"Looking for Component: {componentId}");
-                var component = await _componentRepository.GetByIdAsync(componentId, cancellationToken);
+                var cachedComponents = await _componentCacheService.GetCachedComponentsAsync();
+                var component = cachedComponents.FirstOrDefault(c => c.Id == componentId);
                 if (component == null)
                 {
-                    Console.WriteLine("Component not found");
+                    Console.WriteLine("Component not found in cache");
                     return BadRequest("Component not found");
                 }
 
@@ -600,7 +605,7 @@ namespace Micon.CMS.Controllers
         [HttpGet]
         public async Task<IActionResult> GetComponents(CancellationToken cancellationToken)
         {
-            var components = await _componentRepository.GetAllAsync(cancellationToken);
+            var components = await _componentCacheService.GetCachedComponentsAsync();
             return Json(components.Select(c => new
             {
                 id = c.Id,
