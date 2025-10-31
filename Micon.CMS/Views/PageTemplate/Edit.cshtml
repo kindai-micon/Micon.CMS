@@ -1,4 +1,5 @@
-﻿@model Micon.CMS.Models.PageTemplate
+@using Micon.CMS.Controllers
+@model Micon.CMS.Models.PageTemplate
 
 @{
     ViewData["Title"] = "ページテンプレート編集";
@@ -30,26 +31,16 @@
             isSaving: false,
 
             init() {
-                console.log('Tree Editor initialized');
-                console.log('Available components:', this.components);
-                console.log('Component hierarchy:', componentHierarchy);
-
-                // componentHierarchy は既に ComponentTreeNode の配列形式
-                // ワークスペースから直接読み込まれているため、そのまま使用
                 if (componentHierarchy && Array.isArray(componentHierarchy) && componentHierarchy.length > 0) {
                     try {
                         this.tree = this.normalizeTree(componentHierarchy);
-                        console.log('Loaded tree from workspace:', this.tree);
                     } catch (error) {
-                        console.error('Error loading tree from workspace:', error);
                         this.tree = [];
                     }
                 } else {
-                    console.log('No component hierarchy available');
                     this.tree = [];
                 }
 
-                // ツリーをレンダリング
                 this.$nextTick(() => this.renderTree());
             },
 
@@ -147,15 +138,6 @@
                 const apiUrl = '@Url.Action("AddComponent", "PageTemplate")';
 
                 try {
-                    console.log('API URL:', apiUrl);
-                    console.log('Request body:', {
-                        pageTemplateId: '@Model.Id',
-                        componentId: component.id,
-                        parentPath: this.currentParentPath,
-                        slotName: slotName
-                    });
-
-                    // サーバーにコンポーネントを追加
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: {
@@ -171,26 +153,19 @@
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error('Error response:', errorText);
                         alert('コンポーネントの追加に失敗しました: ' + errorText);
                         return;
                     }
 
                     const result = await response.json();
-                    console.log('Component added successfully:', result);
-
                     if (result && Array.isArray(result.tree)) {
                         this.tree = this.normalizeTree(result.tree);
                         this.$nextTick(() => this.renderTree());
-                        // プレビューをリロード
                         this.refreshPreview();
-                    } else {
-                        console.warn('No tree information returned from AddComponent, keeping current state.');
                     }
 
                     this.closeModal();
                 } catch (error) {
-                    console.error('Error adding component:', error);
                     alert('コンポーネントの追加中にエラーが発生しました: ' + error.message);
                 }
             },
@@ -221,7 +196,6 @@
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error('Error removing component:', errorText);
                         alert('コンポーネントの削除に失敗しました: ' + errorText);
                         return;
                     }
@@ -232,11 +206,8 @@
                         this.$nextTick(() => this.renderTree());
                         // プレビューをリロード
                         this.refreshPreview();
-                    } else {
-                        console.warn('No tree information returned from RemoveComponent, keeping current state.');
                     }
                 } catch (error) {
-                    console.error('Error removing component:', error);
                     alert('コンポーネントの削除でエラーが発生しました: ' + error.message);
                 }
             },
@@ -251,56 +222,11 @@
             },
 
 
-            normalizeTree(nodes) {
-
-                if (!Array.isArray(nodes)) {
-
-                    return [];
-
-                }
-
-
-
-                return nodes.map(node => {
-
-                    const rawComponentId = node.componentId ?? node.ComponentId ?? '';
-
-                    const rawPackageId = node.packageId ?? node.PackageId ?? '';
-
-
-
-                    const normalized = {
-
-                        componentId: rawComponentId ? String(rawComponentId) : '',
-
-                        componentName: node.componentName ?? node.ComponentName ?? '',
-
-                        packageId: rawPackageId ? String(rawPackageId) : '',
-
-                        slotName: node.slotName ?? node.SlotName ?? 'Main',
-
-                        settings: node.settings ?? node.Settings ?? {},
-
-                        children: []
-
-                    };
-
-
-
-                    const childNodes = node.children ?? node.Children ?? [];
-
-                    normalized.children = this.normalizeTree(childNodes);
-
-
-
-                    return normalized;
-
-                });
-
-            },
-
-
-
+            normalizeTree(nodes) {                if (!Array.isArray(nodes)) {                    return [];                }
+                return nodes.map(node => {                    const rawComponentId = node.componentId ?? node.ComponentId ?? '';                    const rawPackageId = node.packageId ?? node.PackageId ?? '';
+                    const normalized = {                        componentId: rawComponentId ? String(rawComponentId) : '',                        componentName: node.componentName ?? node.ComponentName ?? '',                        packageId: rawPackageId ? String(rawPackageId) : '',                        slotName: node.slotName ?? node.SlotName ?? 'Main',                        settings: node.settings ?? node.Settings ?? {},                        children: []                    };
+                    const childNodes = node.children ?? node.Children ?? [];                    normalized.children = this.normalizeTree(childNodes);
+                    return normalized;                });            },
             // ステータス情報の取得
             getStatus() {
                 if (this.tree.length === 0) {
@@ -334,8 +260,6 @@
                 if (this.isSaving) return;
                 this.isSaving = true;
 
-                console.log('Saving tree...', this.tree);
-
                 try {
                     const response = await fetch('@Url.Action("SavePageTemplate", "PageTemplate")', {
                         method: 'POST',
@@ -348,23 +272,27 @@
                         })
                     });
 
+                    const responseText = await response.text();
+
                     if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('Error response:', errorText);
-                        alert('保存に失敗しました: ' + errorText);
+                        alert('保存に失敗しました: ' + responseText);
                         return;
                     }
 
-                    const result = await response.json();
-                    console.log('Tree saved successfully:', result);
+                    try {
+                        JSON.parse(responseText);
+                    } catch (e) {
+                        alert('保存に失敗しました: レスポンスが無効です\n' + responseText);
+                        return;
+                    }
+
                     alert('ページテンプレートが正常に保存されました');
 
-                    // ページをリロードして最新の状態を表示
+                    // Index にリダイレクト
                     setTimeout(() => {
-                        location.reload();
+                        window.location.href = '@Url.Action(nameof(PageTemplateController.Index), "PageTemplate")';
                     }, 500);
                 } catch (error) {
-                    console.error('Error saving tree:', error);
                     alert('保存中にエラーが発生しました: ' + error.message);
                 } finally {
                     this.isSaving = false;
@@ -381,6 +309,14 @@
 
                 if (matchedComponent && Array.isArray(matchedComponent.slots) && matchedComponent.slots.length > 0) {
                     return matchedComponent.slots;
+                }
+
+                // スロット情報がない場合、実際の子要素から取得したスロット名を使用
+                if (node.children && node.children.length > 0) {
+                    const actualSlots = [...new Set(node.children.map(child => child.slotName || 'Main'))];
+                    if (actualSlots.length > 0) {
+                        return actualSlots;
+                    }
                 }
 
                 return ['Main'];

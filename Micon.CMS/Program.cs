@@ -15,7 +15,7 @@ namespace Micon.CMS
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var options = new WebApplicationOptions
             {
@@ -127,6 +127,9 @@ namespace Micon.CMS
             builder.Services.AddScoped<IPageTemplateWorkspaceRepository, PageTemplateWorkspaceRepository>();
             builder.Services.AddScoped<ITestService, TestService>();
             builder.Services.AddScoped<ComponentSlotAnalyzerService>();
+            builder.Services.AddScoped<ComponentTreeService>();
+            builder.Services.AddScoped<WorkspaceService>();
+            builder.Services.AddSingleton<IComponentCacheService, ComponentCacheService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -206,158 +209,13 @@ namespace Micon.CMS
 
                 AssemblyService.AddAssemblies(pluginAssemblies);
 
-                // プラグインからコンポーネントを検出して登録
-                foreach (var assembly in pluginAssemblies)
-                {
-                    try
-                    {
-                        // MiconCmsSettingsからPackageIdを取得
-                        var settingsType = assembly.GetTypes()
-                            .FirstOrDefault(t => t.IsPublic && t.IsClass && t.Name == "MiconCmsSettings");
-
-                        if (settingsType != null)
-                        {
-                            var packageIdField = settingsType.GetField("PackageId");
-                            if (packageIdField != null && packageIdField.IsStatic)
-                            {
-                                var packageId = (Guid?)packageIdField.GetValue(null);
-                                if (packageId.HasValue)
-                                {
-                                    // ViewComponentを探す
-                                    var viewComponentTypes = assembly.GetTypes()
-                                        .Where(t => t.IsPublic && t.IsClass && t.Name.EndsWith("ViewComponent"))
-                                        .ToList();
-
-                                    foreach (var componentType in viewComponentTypes)
-                                    {
-                                        var componentName = componentType.FullName ?? componentType.Name;
-
-                                        // データベースに既に存在するか確認
-                                        var existingComponent = context.Components
-                                            .FirstOrDefault(c => c.PackageId == packageId.Value && c.Name == componentName);
-
-                                        if (existingComponent == null)
-                                        {
-                                            // 新しいコンポーネントを登録
-                                            context.Components.Add(new Component
-                                            {
-                                                PackageId = packageId.Value,
-                                                Name = componentName
-                                            });
-                                            Console.WriteLine($"Registered component: {componentName} (PackageId: {packageId.Value})");
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error registering components from assembly: {assembly.FullName}");
-                        Console.WriteLine(ex.Message);
-                    }
-                }
-
-                context.SaveChanges();
-
-                // プラグインから CSS を事前抽出・登録
-                var cssExtractor = serviceProvider.GetRequiredService<CssExtractorService>();
-                var cssService = serviceProvider.GetRequiredService<CssService>();
-
-                foreach (var assembly in pluginAssemblies)
-                {
-                    try
-                    {
-                        // MiconCmsSettingsからPackageIdを取得
-                        var settingsType = assembly.GetTypes()
-                            .FirstOrDefault(t => t.IsPublic && t.IsClass && t.Name == "MiconCmsSettings");
-
-                        if (settingsType == null)
-                        {
-                            continue;
-                        }
-
-                        var packageIdField = settingsType.GetField("PackageId");
-                        if (packageIdField == null || !packageIdField.IsStatic)
-                        {
-                            continue;
-                        }
-
-                        var packageId = (Guid?)packageIdField.GetValue(null);
-                        if (!packageId.HasValue)
-                        {
-                            continue;
-                        }
-
-                        // ViewComponent Razor ファイルを探す（EmbeddedFileProvider はドット表記を使用）
-                        var embeddedProvider = new Microsoft.Extensions.FileProviders.EmbeddedFileProvider(assembly);
-
-                        // ルートディレクトリの内容を確認
-                        var rootContents = embeddedProvider.GetDirectoryContents("");
-
-                        // Views.Shared.Components.* で始まるファイルを収集
-                        var componentFiles = new Dictionary<string, List<string>>();
-                        foreach (var item in rootContents)
-                        {
-                            if (!item.IsDirectory && item.Name.StartsWith("Views.Shared.Components.") && item.Name.EndsWith(".cshtml"))
-                            {
-                                // Views.Shared.Components.C1.Default.cshtml → C1ViewComponent
-                                var parts = item.Name.Split('.');
-                                if (parts.Length >= 5) // Views, Shared, Components, ComponentName, FileName
-                                {
-                                    var componentDirectoryName = parts[3];
-                                    // ViewComponent クラス名の形式: {DirectoryName}ViewComponent
-                                    var componentName = $"{componentDirectoryName}ViewComponent";
-
-                                    if (!componentFiles.ContainsKey(componentName))
-                                    {
-                                        componentFiles[componentName] = new List<string>();
-                                    }
-                                    componentFiles[componentName].Add(item.Name);
-                                }
-                            }
-                        }
-
-                        // 各コンポーネントのファイルを処理
-                        foreach (var (componentName, files) in componentFiles)
-                        {
-                            foreach (var embeddedFileName in files)
-                            {
-                                var fileInfo = embeddedProvider.GetFileInfo(embeddedFileName);
-
-                                if (!fileInfo.Exists)
-                                {
-                                    continue;
-                                }
-
-                                using (var stream = fileInfo.CreateReadStream())
-                                using (var reader = new System.IO.StreamReader(stream))
-                                {
-                                    var razorContent = reader.ReadToEnd();
-
-                                    // CSS を抽出・スコープ化
-                                    var (cleanedRazor, cssContent) = cssExtractor.ExtractCss(
-                                        razorContent,
-                                        componentName,
-                                        packageId.Value);
-
-                                    if (cssContent != null)
-                                    {
-                                        // 抽出した CSS を CssService に登録
-                                        cssService.RegisterCssContent(packageId.Value, componentName, cssContent);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // CSS 抽出エラーを無視して続行
-                    }
-                }
+                // プラグインアセンブリからコンポーネント情報をロードしてキャッシュに保存
+                var cacheService = app.Services.GetRequiredService<IComponentCacheService>();
+                await cacheService.LoadComponentsFromAssembliesAsync(pluginAssemblies);
+                Console.WriteLine("Component cache initialized");
             }
 
-            
+
             app.Run();
         }
     }
