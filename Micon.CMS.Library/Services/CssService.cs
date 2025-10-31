@@ -4,19 +4,16 @@ using Microsoft.Extensions.Logging;
 namespace Micon.CMS.Library.Services
 {
     /// <summary>
-    /// Component の CSS をメモリキャッシュで管理するサービス
-    /// PackageId + ComponentName をキーとして CSS クラス名と CSS コンテンツを保持
+    /// Component の CSS を IMemoryCache で管理するサービス
+    /// PackageId + ComponentName をキーとして CSS コンテンツを保持
+    /// Singleton で共有され、確実にデータが保持される
     /// </summary>
     public class CssService
     {
         private readonly IMemoryCache _cache;
         private readonly ILogger<CssService> _logger;
-        private const string CACHE_KEY_PREFIX = "css_scoped_";
-        private const string CACHE_KEY_CONTENT_PREFIX = "css_content_";
-        private const string CACHE_KEY_ALL = "css_all_";
-        private const string CACHE_KEY_COMPONENTS_LIST = "css_components_list_";
 
-        // 登録されたコンポーネントの一覧を追跡するためのローカルリスト
+        // 登録されたコンポーネントの一覧を追跡
         private readonly HashSet<string> _registeredComponents = new();
 
         public CssService(IMemoryCache cache, ILogger<CssService> logger)
@@ -38,8 +35,8 @@ namespace Micon.CMS.Library.Services
         /// </summary>
         public void RegisterCssClass(Guid packageId, string componentName, string cssClassName)
         {
-            var cacheKey = GetCacheKey(packageId, componentName);
-            _cache.Set(cacheKey, cssClassName, TimeSpan.FromHours(24));
+            var classKey = GetClassKey(packageId, componentName);
+            _cache.Set(classKey, cssClassName, TimeSpan.FromHours(24));
             _logger.LogInformation($"Registered CSS class: {componentName} -> {cssClassName}");
         }
 
@@ -49,9 +46,9 @@ namespace Micon.CMS.Library.Services
         /// </summary>
         public string GetCssClass(Guid packageId, string componentName)
         {
-            var cacheKey = GetCacheKey(packageId, componentName);
+            var classKey = GetClassKey(packageId, componentName);
 
-            if (_cache.TryGetValue(cacheKey, out var cssClass))
+            if (_cache.TryGetValue(classKey, out var cssClass))
             {
                 return cssClass?.ToString() ?? string.Empty;
             }
@@ -63,19 +60,17 @@ namespace Micon.CMS.Library.Services
         }
 
         /// <summary>
-        /// CSS コンテンツをキャッシュに保存
+        /// CSS コンテンツを保存
         /// </summary>
         public void RegisterCssContent(Guid packageId, string componentName, string cssContent)
         {
-            var contentKey = GetContentCacheKey(packageId, componentName);
+            var contentKey = GetContentKey(packageId, componentName);
             _cache.Set(contentKey, cssContent, TimeSpan.FromHours(24));
 
             // 登録されたコンポーネント一覧に追加
-            var componentKey = $"{packageId:N}_{componentName}";
-            _registeredComponents.Add(componentKey);
+            _registeredComponents.Add(contentKey);
 
-            // すべての CSS キャッシュを無効化（再生成が必要）
-            InvalidateAllCssCache();
+            _logger.LogInformation($"Registered CSS content for {componentName}");
         }
 
         /// <summary>
@@ -83,23 +78,16 @@ namespace Micon.CMS.Library.Services
         /// </summary>
         public string GetAllCssContent()
         {
-            var allCacheKey = CACHE_KEY_ALL;
-
-            // キャッシュから取得
-            if (_cache.TryGetValue(allCacheKey, out var allCss))
+            if (_registeredComponents.Count == 0)
             {
-                return allCss?.ToString() ?? string.Empty;
+                return string.Empty;
             }
 
-            // キャッシュにない場合は、登録されているすべての CSS コンテンツを集約
             var allCssContent = new System.Text.StringBuilder();
 
-            foreach (var componentKey in _registeredComponents)
+            foreach (var key in _registeredComponents)
             {
-                // componentKey は "{packageId}_{componentName}" の形式
-                var contentCacheKey = $"{CACHE_KEY_CONTENT_PREFIX}{componentKey}";
-
-                if (_cache.TryGetValue(contentCacheKey, out var cssContent))
+                if (_cache.TryGetValue(key, out var cssContent))
                 {
                     if (!string.IsNullOrEmpty(cssContent?.ToString()))
                     {
@@ -109,23 +97,15 @@ namespace Micon.CMS.Library.Services
                 }
             }
 
-            var result = allCssContent.ToString();
-
-            // 集約した CSS をキャッシュに保存
-            if (!string.IsNullOrEmpty(result))
-            {
-                _cache.Set(allCacheKey, result, TimeSpan.FromHours(24));
-            }
-
-            return result;
+            return allCssContent.ToString();
         }
 
         /// <summary>
-        /// CSS コンテンツをキャッシュから取得
+        /// CSS コンテンツを取得
         /// </summary>
         public string? GetCssContent(Guid packageId, string componentName)
         {
-            var contentKey = GetContentCacheKey(packageId, componentName);
+            var contentKey = GetContentKey(packageId, componentName);
 
             if (_cache.TryGetValue(contentKey, out var cssContent))
             {
@@ -138,37 +118,34 @@ namespace Micon.CMS.Library.Services
         /// <summary>
         /// キャッシュキーを生成（CSS クラス名用）
         /// </summary>
-        private string GetCacheKey(Guid packageId, string componentName)
+        private string GetClassKey(Guid packageId, string componentName)
         {
-            return $"{CACHE_KEY_PREFIX}{packageId:N}_{componentName}";
+            return $"class_{packageId:N}_{componentName}";
         }
 
         /// <summary>
         /// キャッシュキーを生成（CSS コンテンツ用）
         /// </summary>
-        private string GetContentCacheKey(Guid packageId, string componentName)
+        private string GetContentKey(Guid packageId, string componentName)
         {
-            return $"{CACHE_KEY_CONTENT_PREFIX}{packageId:N}_{componentName}";
+            return $"content_{packageId:N}_{componentName}";
         }
 
         /// <summary>
-        /// すべての CSS キャッシュを無効化
-        /// </summary>
-        private void InvalidateAllCssCache()
-        {
-            // 集約 CSS キャッシュを削除するため、トークンを更新
-            // (IMemoryCache に Clear メソッドがないため、キャッシュキーごとに remove が必要だが、API がない)
-            // 代わりに、次回アクセス時に集約 CSS を再生成するようにする
-        }
-
-        /// <summary>
-        /// すべての CSS クラスをキャッシュから削除
+        /// すべてのキャッシュをクリア
         /// </summary>
         public void ClearCache()
         {
+            _registeredComponents.Clear();
             _logger.LogInformation("Cleared CSS service cache");
-            // 注: IMemoryCache には Clear メソッドがないため、
-            // 実装が必要な場合は Dictionary を使った カスタム実装を検討
+        }
+
+        /// <summary>
+        /// 登録されているコンポーネント数を取得（デバッグ用）
+        /// </summary>
+        public int GetRegisteredComponentCount()
+        {
+            return _registeredComponents.Count;
         }
     }
 }

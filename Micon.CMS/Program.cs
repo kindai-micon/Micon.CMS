@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.FileProviders;
 using System.Reflection;
 using System.Runtime.Loader;
@@ -60,25 +61,30 @@ namespace Micon.CMS
             // CSS 抽出サービスを DI に登録
             builder.Services.AddMemoryCache();
             builder.Services.AddScoped<CssExtractorService>();
-            builder.Services.AddSingleton<CssService>();  // CssService は Singleton にする（_registeredComponents を保持するため）
+
+            // CssService インスタンスを作成して Singleton として登録
+            var tempServiceProvider = builder.Services.BuildServiceProvider();
+            var memoryCacheInstance = tempServiceProvider.GetRequiredService<IMemoryCache>();
+            var loggerFactory = tempServiceProvider.GetRequiredService<ILoggerFactory>();
+            var cssServiceLogger = loggerFactory.CreateLogger<CssService>();
+
+            var cssServiceInstance = new CssService(memoryCacheInstance, cssServiceLogger);
+            builder.Services.AddSingleton(cssServiceInstance);  // インスタンスで登録
+            // 注: tempServiceProvider は Dispose しない。Razor ランタイムコンパイルで使用される
+            // ロガーが dispose 済み ILoggerFactory にアクセスしないようにするため
 
             mvcBuilder.AddRazorRuntimeCompilation(options =>
             {
-                // DI コンテナをビルドしてサービスを取得
-                var serviceProvider = builder.Services.BuildServiceProvider();
-                var cssExtractor = serviceProvider.GetRequiredService<CssExtractorService>();
-                var cssService = serviceProvider.GetRequiredService<CssService>();
-                var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-
                 foreach (var assembly in pluginAssemblies)
                 {
                     var embeddedProvider = new EmbeddedFileProvider(assembly);
 
-                    // CssExtractingFileProvider でラップ
+                    // CssExtractingFileProvider でラップ（Singleton インスタンスを使用）
+                    var cssExtractor = new CssExtractorService(loggerFactory.CreateLogger<CssExtractorService>());
                     var cssExtractingProvider = new CssExtractingFileProvider(
                         embeddedProvider,
                         cssExtractor,
-                        cssService,
+                        cssServiceInstance,
                         loggerFactory.CreateLogger<CssExtractingFileProvider>());
 
                     options.FileProviders.Add(cssExtractingProvider);
@@ -131,6 +137,45 @@ namespace Micon.CMS
             builder.Services.AddScoped<WorkspaceService>();
             builder.Services.AddSingleton<IComponentCacheService, ComponentCacheService>();
             var app = builder.Build();
+
+            // Razorテンプレートを事前読み込み（CSS を事前登録）
+            try
+            {
+                var viewEngine = app.Services.GetRequiredService<IRazorViewEngine>();
+                foreach (var assembly in pluginAssemblies)
+                {
+                    // Components フォルダ配下のすべての Razor ファイルを読み込み
+                    var embeddedProvider = new EmbeddedFileProvider(assembly);
+                    var componentsDir = embeddedProvider.GetDirectoryContents("Views/Shared/Components");
+
+                    if (componentsDir.Exists)
+                    {
+                        foreach (var dir in componentsDir)
+                        {
+                            if (dir.IsDirectory)
+                            {
+                                var viewDir = embeddedProvider.GetDirectoryContents($"Views/Shared/Components/{dir.Name}");
+                                foreach (var file in viewDir)
+                                {
+                                    if (file.Name.EndsWith(".cshtml", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        // ファイルを読み込んで CreateReadStream() を呼び出させる
+                                        using (var stream = file.CreateReadStream())
+                                        {
+                                            var content = new StreamReader(stream).ReadToEnd();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Console.WriteLine("[Startup] Preloaded Razor templates and CSS");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Startup] Error preloading Razor templates: {ex.Message}");
+            }
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())

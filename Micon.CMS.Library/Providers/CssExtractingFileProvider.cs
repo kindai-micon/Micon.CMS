@@ -2,12 +2,14 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Micon.CMS.Library.Services;
+using System.Text.RegularExpressions;
 
 namespace Micon.CMS.Library.Providers
 {
     /// <summary>
     /// IFileProvider のラッパー
     /// Razor ファイル読み込み時に <style> タグを抽出し、CSS を分離
+    /// 全要素に自動的にスコープクラスを追加
     /// </summary>
     public class CssExtractingFileProvider : IFileProvider
     {
@@ -60,6 +62,7 @@ namespace Micon.CMS.Library.Providers
 
     /// <summary>
     /// CSS 抽出を行うファイル情報ラッパー
+    /// Razor コンテンツから <style> タグを抽出し、全要素にスコープクラスを追加
     /// </summary>
     public class CssExtractingFileInfo : IFileInfo
     {
@@ -99,9 +102,6 @@ namespace Micon.CMS.Library.Providers
             {
                 var originalContent = reader.ReadToEnd();
 
-                // コンポーネント名を抽出（例: Views/Shared/Components/C1/Default.cshtml → C1）
-                var componentName = ExtractComponentName(_subpath);
-
                 // アセンブリから MiconCmsSettings.PackageId を取得
                 var packageId = GetPackageIdFromAssembly();
                 if (packageId == Guid.Empty)
@@ -112,26 +112,119 @@ namespace Micon.CMS.Library.Providers
                     return new MemoryStream(_cachedContent);
                 }
 
-                // CSS を抽出・スコープ化
+                // スコープクラス名を先に生成 (packageId_FolderNameFileName)
+                var scopeClassName = GenerateScopedClassName(packageId, _subpath);
+                _logger.LogInformation($"Generated scoped class name: {scopeClassName}");
+
+                // CSS を抽出・スコープ化（スコープクラス名を使用）
                 var (cleanedRazor, cssContent) = _cssExtractor.ExtractCss(
                     originalContent,
-                    componentName,
+                    scopeClassName,
                     packageId);
 
                 // 抽出した CSS を CssService に登録
                 if (!string.IsNullOrEmpty(cssContent) && _cssService != null)
                 {
-                    _cssService.RegisterCssContent(packageId, componentName, cssContent);
-                    _logger.LogInformation($"Registered CSS for {componentName} (PackageId: {packageId})");
+                    _cssService.RegisterCssContent(packageId, scopeClassName, cssContent);
+                    _logger.LogInformation($"Registered CSS for {scopeClassName} (PackageId: {packageId})");
+                }
+                else
+                {
+                    _logger.LogInformation($"No CSS content extracted for {scopeClassName}");
                 }
 
+                // 全要素にスコープクラスを追加
+                var razorWithScopedClasses = AddScopedClassToAllElements(cleanedRazor, scopeClassName);
+
                 _logger.LogInformation(
-                    $"Razor '{_subpath}' processed with scoped CSS");
+                    $"Razor '{_subpath}' processed with scoped CSS and scoped classes");
 
                 // 修正済み Razor をメモリに保存
-                _cachedContent = System.Text.Encoding.UTF8.GetBytes(cleanedRazor);
+                _cachedContent = System.Text.Encoding.UTF8.GetBytes(razorWithScopedClasses);
                 return new MemoryStream(_cachedContent);
             }
+        }
+
+        /// <summary>
+        /// パスからスコープクラス名を生成
+        /// 例: Views/Shared/Components/C1/Default.cshtml → {packageId}_C1Default
+        /// </summary>
+        private string GenerateScopedClassName(Guid packageId, string subpath)
+        {
+            var parts = subpath.Split('/', '\\');
+            var componentsIndex = Array.IndexOf(parts, "Components");
+
+            if (componentsIndex >= 0 && componentsIndex + 1 < parts.Length && componentsIndex + 2 < parts.Length)
+            {
+                var folderName = parts[componentsIndex + 1];  // C1
+                var fileName = Path.GetFileNameWithoutExtension(parts[componentsIndex + 2]);  // Default
+                var packageIdStr = packageId.ToString("N");
+                return $"{packageIdStr}_{folderName}{fileName}";
+            }
+
+            return packageId.ToString("N");
+        }
+
+        /// <summary>
+        /// HTMLコンテンツ内のすべての開きタグにスコープクラスを追加
+        /// </summary>
+        private string AddScopedClassToAllElements(string html, string scopeClassName)
+        {
+            // 開きタグのパターン: <tagname ...attributes...> または <tagname ...attributes... />
+            // ただし、スクリプトやスタイルの中のタグは変換しない
+            var tagPattern = @"<(/?)(\w+)((?:\s+[^>]*?)?)(/?)>";
+
+            var result = Regex.Replace(html, tagPattern, (match) =>
+            {
+                var closingSlash = match.Groups[1].Value; // 閉じタグの場合 "/"
+                var tagName = match.Groups[2].Value;
+                var attributes = match.Groups[3].Value ?? "";
+                var selfClosing = match.Groups[4].Value; // 自閉じタグの場合 "/"
+
+                // 閉じタグの場合はスキップ
+                if (!string.IsNullOrEmpty(closingSlash))
+                {
+                    return match.Value;
+                }
+
+                // スクリプトやスタイルタグの場合はスキップ
+                if (tagName.Equals("script", StringComparison.OrdinalIgnoreCase) ||
+                    tagName.Equals("style", StringComparison.OrdinalIgnoreCase))
+                {
+                    return match.Value;
+                }
+
+                // class 属性を追加（既存の class 属性があれば追加、なければ新規作成）
+                if (attributes.Contains("class=", StringComparison.OrdinalIgnoreCase))
+                {
+                    // 既存の class 属性を見つけて値を追加
+                    attributes = Regex.Replace(attributes,
+                        @"class\s*=\s*[""']([^""']*)[""']",
+                        (classMatch) =>
+                        {
+                            var existingClasses = classMatch.Groups[1].Value;
+                            return $@"class=""{scopeClassName} {existingClasses}""";
+                        },
+                        RegexOptions.IgnoreCase);
+                }
+                else
+                {
+                    // class 属性を追加
+                    attributes += $@" class=""{scopeClassName}""";
+                }
+
+                // 自閉じタグの場合は /> 形式で返す、そうでなければ > 形式で返す
+                if (!string.IsNullOrEmpty(selfClosing))
+                {
+                    return $"<{tagName}{attributes} />";
+                }
+                else
+                {
+                    return $"<{tagName}{attributes}>";
+                }
+            });
+
+            return result;
         }
 
         /// <summary>
