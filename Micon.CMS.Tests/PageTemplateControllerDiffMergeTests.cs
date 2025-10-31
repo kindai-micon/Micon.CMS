@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using Micon.CMS.Controllers;
 using Micon.CMS.Library.Services;
 using Micon.CMS.Models;
+using Micon.CMS.Models.Api;
 using Micon.CMS.Repositories;
+using Micon.CMS.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -417,6 +419,9 @@ namespace Micon.CMS.Tests
             var componentRelationRepository = _scope!.ServiceProvider.GetRequiredService<IComponentRelationRepository>();
             var workspaceRepository = _scope!.ServiceProvider.GetRequiredService<IPageTemplateWorkspaceRepository>();
             var slotAnalyzerService = _scope!.ServiceProvider.GetRequiredService<ComponentSlotAnalyzerService>();
+            var componentCacheService = _scope!.ServiceProvider.GetRequiredService<IComponentCacheService>();
+            var treeService = _scope!.ServiceProvider.GetRequiredService<ComponentTreeService>();
+            var workspaceService = _scope!.ServiceProvider.GetRequiredService<WorkspaceService>();
 
             // IViewComponentHelperはテストでは不要（private methodのみテスト）
             // null!を使ってテストを実行
@@ -427,11 +432,13 @@ namespace Micon.CMS.Tests
                 workspaceRepository,
                 null!,
                 slotAnalyzerService,
-                null!);
+                componentCacheService,
+                treeService,
+                workspaceService);
         }
 
         /// <summary>
-        /// MergeComponentRelationTreeメソッドをリフレクションで呼び出す
+        /// MergeComponentRelationTreeメソッドを呼び出す
         /// </summary>
         private async Task<ComponentRelation> InvokeMergeComponentRelationTree(
             PageTemplateController controller,
@@ -440,16 +447,8 @@ namespace Micon.CMS.Tests
             Guid? parentId,
             int order)
         {
-            var method = typeof(PageTemplateController)
-                .GetMethod("MergeComponentRelationTree",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-            Assert.NotNull(method);
-
-            var task = (Task<ComponentRelation>)method!.Invoke(controller,
-                new object?[] { newNode, existingRelation, parentId, order, _cancellationToken })!;
-
-            return await task;
+            var treeService = _scope!.ServiceProvider.GetRequiredService<ComponentTreeService>();
+            return await treeService.MergeComponentRelationTree(newNode, existingRelation, parentId, order, _cancellationToken);
         }
     }
 }

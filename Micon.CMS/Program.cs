@@ -106,6 +106,8 @@ namespace Micon.CMS
             builder.Services.AddScoped<IPageTemplateWorkspaceRepository, PageTemplateWorkspaceRepository>();
             builder.Services.AddScoped<ITestService, TestService>();
             builder.Services.AddScoped<ComponentSlotAnalyzerService>();
+            builder.Services.AddScoped<ComponentTreeService>();
+            builder.Services.AddScoped<WorkspaceService>();
             builder.Services.AddSingleton<IComponentCacheService, ComponentCacheService>();
             var app = builder.Build();
 
