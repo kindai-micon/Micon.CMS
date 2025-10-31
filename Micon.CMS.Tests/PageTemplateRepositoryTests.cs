@@ -100,14 +100,14 @@ namespace Micon.CMS.Tests
             _dbContext.ComponentRelations.Add(rootRelation);
             await _dbContext.SaveChangesAsync();
 
-            var category = new PageCategory { Name = "TestCategory" };
-            _dbContext.PageCategories.Add(category);
-            await _dbContext.SaveChangesAsync();
-
             var template = new PageTemplate { Name = "TestTemplate", ComponentRelationId = rootRelation.Id };
             _dbContext.PageTemplates.Add(template);
             await _dbContext.SaveChangesAsync();
             _pageTemplateId = template.Id;
+
+            var category = new PageCategory { Name = "TestCategory", PageTemplateId = template.Id };
+            _dbContext.PageCategories.Add(category);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
