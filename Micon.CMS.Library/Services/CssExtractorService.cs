@@ -20,12 +20,12 @@ namespace Micon.CMS.Library.Services
         /// Razor コンテンツから <style> タグを抽出し、CSS をスコープ化
         /// </summary>
         /// <param name="razorContent">元の Razor テンプレートコンテンツ</param>
-        /// <param name="componentName">ViewComponent ファイル名（例: Default、C1Default）</param>
-        /// <param name="packageId">パッケージ ID</param>
+        /// <param name="scopeClassName">スコープクラス名（既に完全形：{packageIdHex}_{folderName}{fileName}）</param>
+        /// <param name="packageId">パッケージ ID（互換性のため保持）</param>
         /// <returns>修正済み Razor コンテンツと抽出・スコープ化された CSS コンテンツ</returns>
         public (string cleanedRazor, string? cssContent) ExtractCss(
             string razorContent,
-            string componentName,
+            string scopeClassName,
             Guid packageId)
         {
             try
@@ -36,15 +36,15 @@ namespace Micon.CMS.Library.Services
 
                 if (!match.Success)
                 {
-                    _logger.LogInformation($"No <style> tag found in component: {componentName}");
+                    _logger.LogInformation($"No <style> tag found in component: {scopeClassName}");
                     return (razorContent, null);
                 }
 
                 // CSS コンテンツを抽出
                 var originalCss = match.Groups[1].Value.Trim();
 
-                // CSS をスコープ化
-                var scopedCss = ScopeCSS(originalCss, packageId, componentName);
+                // CSS をスコープ化（scopeClassName は既に完全形）
+                var scopedCss = ScopeCSS(originalCss, scopeClassName);
 
                 // Razor から <style> タグを削除
                 var cleanedRazor = Regex.Replace(
@@ -53,31 +53,29 @@ namespace Micon.CMS.Library.Services
                     "",
                     RegexOptions.IgnoreCase);
 
-                _logger.LogInformation($"Extracted CSS from component: {componentName}");
+                _logger.LogInformation($"Extracted CSS from component: {scopeClassName}");
 
                 return (cleanedRazor, scopedCss);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error extracting CSS from {componentName}: {ex.Message}");
+                _logger.LogError($"Error extracting CSS from {scopeClassName}: {ex.Message}");
                 return (razorContent, null);
             }
         }
 
         /// <summary>
         /// CSS のセレクタを スコープ化
-        /// 各セレクタユニットの末尾に .{packageId}_{componentName} を追加
+        /// 各セレクタユニットの末尾に .{scopeClassName} を追加
         ///
         /// 例:
-        /// .component { } → .component.{packageId}_{componentName} { }
-        /// .component h1 { } → .component.{packageId}_{componentName} h1.{packageId}_{componentName} { }
-        /// h1 { } → h1.{packageId}_{componentName} { }
-        /// .component.active { } → .component.active.{packageId}_{componentName} { }
+        /// .component { } → .component.{scopeClass} { }
+        /// .component h1 { } → .component.{scopeClass} h1.{scopeClass} { }
+        /// h1 { } → h1.{scopeClass} { }
+        /// .component.active { } → .component.active.{scopeClass} { }
         /// </summary>
-        private string ScopeCSS(string css, Guid packageId, string componentName)
+        private string ScopeCSS(string css, string scopeClassName)
         {
-            var packageIdStr = packageId.ToString("N");
-            var scopeClassName = $"{packageIdStr}_{componentName}";
             var scopeClassSelector = $".{scopeClassName}";
 
             var lines = css.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
