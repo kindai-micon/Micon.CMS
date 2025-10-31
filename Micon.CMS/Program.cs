@@ -14,7 +14,7 @@ namespace Micon.CMS
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var options = new WebApplicationOptions
             {
@@ -102,7 +102,13 @@ namespace Micon.CMS
             builder.Services.AddScoped<IPageTemplateRepository,PageTemplateRepository>();
             builder.Services.AddScoped<IPageRepository, PageRepository>();
             builder.Services.AddScoped<IComponentRelationRepository, ComponentRelationRepository>();
+            builder.Services.AddScoped<IComponentRepository, ComponentRepository>();
+            builder.Services.AddScoped<IPageTemplateWorkspaceRepository, PageTemplateWorkspaceRepository>();
             builder.Services.AddScoped<ITestService, TestService>();
+            builder.Services.AddScoped<ComponentSlotAnalyzerService>();
+            builder.Services.AddScoped<ComponentTreeService>();
+            builder.Services.AddScoped<WorkspaceService>();
+            builder.Services.AddSingleton<IComponentCacheService, ComponentCacheService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -164,10 +170,28 @@ namespace Micon.CMS
                 var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
                 context.Database.Migrate();
 
+                // デフォルトTenantの作成
+                var defaultTenantId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+                if (!context.Tenants.Any(t => t.Id == defaultTenantId))
+                {
+                    context.Tenants.Add(new Tenant
+                    {
+                        Id = defaultTenantId,
+                        TenantName = "default",
+                        IsAdmin = true
+                    });
+                    context.SaveChanges();
+                }
+
                 AssemblyService.AddAssemblies(pluginAssemblies);
+
+                // プラグインアセンブリからコンポーネント情報をロードしてキャッシュに保存
+                var cacheService = app.Services.GetRequiredService<IComponentCacheService>();
+                await cacheService.LoadComponentsFromAssembliesAsync(pluginAssemblies);
+                Console.WriteLine("Component cache initialized");
             }
 
-            
+
             app.Run();
         }
     }
