@@ -73,6 +73,9 @@ namespace Micon.CMS
             // 注: tempServiceProvider は Dispose しない。Razor ランタイムコンパイルで使用される
             // ロガーが dispose 済み ILoggerFactory にアクセスしないようにするため
 
+            // Preload用にCssExtractingFileProviderのインスタンスマッピングを保持
+            var cssExtractingProvidersByAssembly = new Dictionary<Assembly, CssExtractingFileProvider>();
+
             mvcBuilder.AddRazorRuntimeCompilation(options =>
             {
                 foreach (var assembly in pluginAssemblies)
@@ -87,6 +90,7 @@ namespace Micon.CMS
                         cssServiceInstance,
                         loggerFactory.CreateLogger<CssExtractingFileProvider>());
 
+                    cssExtractingProvidersByAssembly[assembly] = cssExtractingProvider;
                     options.FileProviders.Add(cssExtractingProvider);
                 }
             });
@@ -139,11 +143,21 @@ namespace Micon.CMS
             var app = builder.Build();
 
             // Razorテンプレートを事前読み込み（CSS を事前登録）
+            // CssExtractingFileProvider を経由してファイルを読み込み、CSS処理を先に実行
             try
             {
-                var viewEngine = app.Services.GetRequiredService<IRazorViewEngine>();
+                var preloadStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var totalFilesLoaded = 0;
+
                 foreach (var assembly in pluginAssemblies)
                 {
+                    // CssExtractingFileProviderを取得（AddRazorRuntimeCompilationで作成されたインスタンス）
+                    if (!cssExtractingProvidersByAssembly.TryGetValue(assembly, out var cssExtractingProvider))
+                    {
+                        Console.WriteLine($"[Startup] Warning: CssExtractingFileProvider not found for assembly {assembly.FullName}");
+                        continue;
+                    }
+
                     // Components フォルダ配下のすべての Razor ファイルを読み込み
                     var embeddedProvider = new EmbeddedFileProvider(assembly);
                     var componentsDir = embeddedProvider.GetDirectoryContents("Views/Shared/Components");
@@ -159,10 +173,19 @@ namespace Micon.CMS
                                 {
                                     if (file.Name.EndsWith(".cshtml", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        // ファイルを読み込んで CreateReadStream() を呼び出させる
-                                        using (var stream = file.CreateReadStream())
+                                        // ファイルパスを構築
+                                        var filePath = $"Views/Shared/Components/{dir.Name}/{file.Name}";
+
+                                        // CssExtractingFileProvider を経由してファイルを読み込む
+                                        // これにより、CSS抽出・スコープ化処理が Preload 時に実行される
+                                        var fileInfo = cssExtractingProvider.GetFileInfo(filePath);
+                                        if (fileInfo.Exists)
                                         {
-                                            var content = new StreamReader(stream).ReadToEnd();
+                                            using (var stream = fileInfo.CreateReadStream())
+                                            {
+                                                var content = new StreamReader(stream).ReadToEnd();
+                                                totalFilesLoaded++;
+                                            }
                                         }
                                     }
                                 }
@@ -170,7 +193,9 @@ namespace Micon.CMS
                         }
                     }
                 }
-                Console.WriteLine("[Startup] Preloaded Razor templates and CSS");
+
+                preloadStopwatch.Stop();
+                Console.WriteLine($"[Startup] Preloaded {totalFilesLoaded} Razor templates with CSS processing in {preloadStopwatch.ElapsedMilliseconds}ms");
             }
             catch (Exception ex)
             {
