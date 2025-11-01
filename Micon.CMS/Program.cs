@@ -1,8 +1,8 @@
 using Micon.CMS.Library.Services;
-using Micon.CMS.Library.Providers;
 using Micon.CMS.Models;
 using Micon.CMS.Repositories;
 using Micon.CMS.Services;
+using Micon.CMS.Providers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Razor;

@@ -1,5 +1,6 @@
 using Micon.CMS.Library.Services;
-using Micon.CMS.Library.Providers;
+using Micon.CMS.Services;
+using Micon.CMS.Providers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;

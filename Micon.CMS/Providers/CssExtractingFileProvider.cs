@@ -2,9 +2,10 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Micon.CMS.Library.Services;
+using Micon.CMS.Services;
 using System.Text.RegularExpressions;
 
-namespace Micon.CMS.Library.Providers
+namespace Micon.CMS.Providers
 {
     /// <summary>
     /// IFileProvider のラッパー

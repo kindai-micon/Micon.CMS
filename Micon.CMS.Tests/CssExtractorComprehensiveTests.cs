@@ -1,4 +1,4 @@
-using Micon.CMS.Library.Services;
+using Micon.CMS.Services;
 using Microsoft.Extensions.Logging;
 using Xunit;
 

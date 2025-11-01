@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
-namespace Micon.CMS.Library.Services
+namespace Micon.CMS.Services
 {
     /// <summary>
     /// Razor テンプレートから <style> タグを抽出し、CSS を別ファイルとして分離するサービス
