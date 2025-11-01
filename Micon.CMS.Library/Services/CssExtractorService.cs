@@ -142,11 +142,10 @@ namespace Micon.CMS.Library.Services
 
             var result = new List<string>();
 
-            for (int i = 0; i < parts.Length; i++)
+            foreach (var part in parts)
             {
-                var part = parts[i];
-
-                if (string.IsNullOrWhiteSpace(part))
+                // 完全に空の部分はスキップ
+                if (part.Length == 0)
                 {
                     continue;
                 }
@@ -154,7 +153,7 @@ namespace Micon.CMS.Library.Services
                 // コンビネータ（スペース、>、+、~）かどうか判定
                 if (Regex.IsMatch(part, @"^(\s+|[>+~]+)$"))
                 {
-                    // コンビネータはそのまま追加
+                    // コンビネータはそのまま追加（スペースを保持）
                     result.Add(part);
                 }
                 else

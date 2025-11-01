@@ -166,13 +166,14 @@ namespace Micon.CMS.Library.Providers
         }
 
         /// <summary>
-        /// HTMLコンテンツ内のすべての開きタグにスコープクラスを追加
+        /// HTMLコンテンツ内のすべての要素にスコープクラスを追加
+        /// 既存のclassは保持して、スコープクラスを追記
         /// </summary>
         private string AddScopedClassToAllElements(string html, string scopeClassName)
         {
             // 開きタグのパターン: <tagname ...attributes...> または <tagname ...attributes... />
             // ただし、スクリプトやスタイルの中のタグは変換しない
-            var tagPattern = @"<(/?)(\w+)((?:\s+[^>]*?)?)(/?)>";
+            var tagPattern = @"<(/?)?(\w+)((?:\s+[^>]*?)?)(/?)>";
 
             var result = Regex.Replace(html, tagPattern, (match) =>
             {
@@ -194,22 +195,22 @@ namespace Micon.CMS.Library.Providers
                     return match.Value;
                 }
 
-                // class 属性を追加（既存の class 属性があれば追加、なければ新規作成）
+                // class 属性を追加（既存の class 属性があれば追記、なければ新規作成）
                 if (attributes.Contains("class=", StringComparison.OrdinalIgnoreCase))
                 {
-                    // 既存の class 属性を見つけて値を追加
+                    // 既存の class 属性を見つけて値を追記
                     attributes = Regex.Replace(attributes,
                         @"class\s*=\s*[""']([^""']*)[""']",
                         (classMatch) =>
                         {
                             var existingClasses = classMatch.Groups[1].Value;
-                            return $@"class=""{scopeClassName} {existingClasses}""";
+                            return $@"class=""{existingClasses} {scopeClassName}""";
                         },
                         RegexOptions.IgnoreCase);
                 }
                 else
                 {
-                    // class 属性を追加
+                    // class 属性を新規作成
                     attributes += $@" class=""{scopeClassName}""";
                 }
 
